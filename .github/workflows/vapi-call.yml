@@ -1,0 +1,41 @@
+name: AI dzwoni (Vapi)
+
+on:
+  schedule:
+    # GitHub liczy cron w UTC i nie zna czasu letniego, więc uruchamiamy się
+    # o 6:05 i 7:05 UTC, a skrypt dzwoni tylko wtedy, gdy w Warszawie jest TARGET_HOUR.
+    # Dni: poniedziałek–piątek.
+    - cron: "5 6,7 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      topic:
+        description: "Temat rozmowy (opcjonalnie, trafia do promptu jako {{temat}})"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vapi-call
+  cancel-in-progress: false
+
+jobs:
+  call:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Zleć połączenie
+        env:
+          VAPI_API_KEY: ${{ secrets.VAPI_API_KEY }}
+          VAPI_ASSISTANT_ID: ${{ secrets.VAPI_ASSISTANT_ID }}
+          VAPI_PHONE_NUMBER_ID: ${{ secrets.VAPI_PHONE_NUMBER_ID }}
+          MY_PHONE_NUMBER: ${{ secrets.MY_PHONE_NUMBER }}
+          TOPIC: ${{ inputs.topic }}
+          MAX_DURATION_SECONDS: ${{ vars.MAX_DURATION_SECONDS || '180' }}
+          # Ręczne uruchomienie dzwoni od razu; z harmonogramu tylko o 8:xx czasu polskiego.
+          # Zmieniając godzinę, zmień też cron powyżej (godzina w Polsce minus 1 i minus 2 h).
+          TARGET_HOUR: ${{ github.event_name == 'schedule' && '8' || '' }}
+        run: bash scripts/vapi-call.sh
