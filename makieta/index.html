@@ -290,7 +290,8 @@ a.row:hover .row-t { color: var(--accent); }
     calendar:  { name: 'Kalendarz na dziś', desc: 'Spotkania z Outlooka i Teams.', w: 3, h: 4, minW: 2, minH: 3 },
     grok:      { name: 'Kolejka X', desc: 'Zlecenia dla Groka i ich stan.', w: 4, h: 4, minW: 3, minH: 3 },
     note:      { name: 'Notatka', desc: 'Miejsce na szybki zapis.', w: 3, h: 4, minW: 2, minH: 2 },
-    gmail:     { name: 'Lista: Gmail', desc: 'Najnowsze wątki z Twojej skrzynki, na żywo.', w: 4, h: 7, minW: 3, minH: 3 }
+    gmail:     { name: 'Lista: Gmail', desc: 'Najnowsze wątki z Twojej skrzynki, na żywo.', w: 4, h: 7, minW: 3, minH: 3 },
+    tasks:     { name: 'Lista: zadania z Notion', desc: 'Zadania po terminie z Tasks Tracker, na żywo.', w: 4, h: 6, minW: 3, minH: 3 }
   };
 
   const k = (id, key, x, y, w = 2, h = 2) => ({ id, type: 'kpi', cfg: { k: key }, x, y, w, h });
@@ -313,7 +314,7 @@ a.row:hover .row-t { color: var(--accent); }
       { id: 'p6', type: 'chats', cfg: { area: 'praca' }, x: 6, y: 2, w: 6, h: 6 },
       { id: 'p7', type: 'calendar', x: 0, y: 8, w: 4, h: 4 },
       { id: 'p8', type: 'shortcuts', x: 4, y: 8, w: 4, h: 3 },
-      { id: 'p9', type: 'brief', x: 8, y: 8, w: 4, h: 4 }
+      { id: 'p9', type: 'tasks', x: 8, y: 8, w: 4, h: 6 }
     ],
     dom: [
       k('d1', 'gmail', 0, 0, 4), k('d2', 'ai', 4, 0, 4), k('d3', 'grokq', 8, 0, 4),
@@ -334,13 +335,48 @@ a.row:hover .row-t { color: var(--accent); }
   const clone = (o) => JSON.parse(JSON.stringify(o));
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-  // Gmail na żywo: konektor Gmail z claude.ai, tylko odczyt.
-  const GMAIL = 'Gmail';
+  // Dane na żywo: konektory Gmail i Notion z claude.ai, tylko odczyt.
+  const GMAIL = 'Gmail', NOTION = 'Notion', NQ_TOOL = 'notion-query-data-sources';
   const GQ = {
     unread:  { label: 'Nieprzeczytane', input: { query: 'in:inbox is:unread', pageSize: 50 } },
     primary: { label: 'Główne',         input: { query: 'in:inbox category:primary newer_than:14d', pageSize: 25 } },
     all:     { label: 'Wszystkie',      input: { query: 'in:inbox newer_than:7d', pageSize: 25 } }
   };
+  const TASKS_DS = 'collection://1fde214f-3164-8002-8e37-000b88ac147a';    // Tasks Tracker
+  const QUEUEX_DS = 'collection://16808ac3-40d4-4e63-af26-d039a24dbdfa';   // Kolejka X
+  const LQ = {
+    overdue: { server: NOTION, tool: NQ_TOOL, every: 600000, input: { data: {
+      mode: 'rows', data_source_url: TASKS_DS, limit: 100,
+      filter: { type: 'group', operator: 'and', filters: [
+        { type: 'property', property: 'Status', propertyType: 'status', operator: 'status_is_not', value: { type: 'is_option', value: 'Done' } },
+        { type: 'property', property: 'Due date', propertyType: 'date', operator: 'date_is_before', value: { type: 'relative', value: 'today' } }
+      ] },
+      sort: [{ property: 'Due date', direction: 'ascending' }]
+    } } },
+    kolejka: { server: NOTION, tool: NQ_TOOL, every: 600000, input: { data: { mode: 'rows', data_source_url: QUEUEX_DS, limit: 50 } } }
+  };
+  for (const [key, q] of Object.entries(GQ)) LQ[key] = { server: GMAIL, tool: 'search_threads', every: 120000, input: q.input };
+
+  const rowsOf = (key) => { const d = live[key] && live[key].data; return d && Array.isArray(d.results) ? d.results : (d ? [] : null); };
+  const notionUrl = (u) => (typeof u === 'string' && /^https:\/\/(app\.notion\.com|www\.notion\.so)\//.test(u)) ? u : 'https://www.notion.so';
+  const PRIO = { High: 'crit', Medium: 'warn', Low: 'ok' };
+  const PRIO_PL = { High: 'wysoki', Medium: 'średni', Low: 'niski' };
+  function daysLate(iso) {
+    const t = Date.parse(iso);
+    if (!t) return null;
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    return Math.max(0, Math.round((today - t) / 86400000));
+  }
+  const dayFmt = (iso) => { const t = Date.parse(iso); return t ? new Date(t).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' }) : ''; };
+  const XST = { 'Pytanie': ['warn', 0], 'Błąd': ['crit', 1], 'W toku': ['acc', 2], 'Do pobrania': ['muted', 3], 'Gotowe': ['ok', 4] };
+  function overdueTasks() {
+    const rows = rowsOf('overdue');
+    if (!rows) return null;
+    return rows.map((r) => ({
+      name: r['Task name'] || '(bez nazwy)', prio: r.Priority || '', due: r['date:Due date:start'],
+      late: daysLate(r['date:Due date:start']), url: notionUrl(r.url)
+    }));
+  }
   const live = {};        // klucz zapytania -> { data, at, err }
   const watching = {};
   let mcp = null, mcpState = 'waiting';   // waiting | ready | none
@@ -378,7 +414,8 @@ a.row:hover .row-t { color: var(--accent); }
   const DENIALS = ['needs_reauth', 'server_not_connected', 'selection_required', 'blocked_by_policy', 'approval_required', 'not_in_manifest', 'not_granted', 'capability_disabled', 'capability_removed', 'consent_required'];
   function ensureWatch(key) {
     if (mcpState !== 'ready' || watching[key]) return;
-    watching[key] = mcp.watchTool(GMAIL, 'search_threads', GQ[key].input, (ev) => {
+    const q = LQ[key];
+    watching[key] = mcp.watchTool(q.server, q.tool, q.input, (ev) => {
       if (ev.type === 'data') {
         live[key] = { data: ev.result.payload || {}, at: (ev.result.cache && ev.result.cache.storedAt) || Date.now(), err: null };
         if (key === 'unread') recordUnread();
@@ -388,11 +425,11 @@ a.row:hover .row-t { color: var(--accent); }
         live[key] = { data: denied ? null : prev.data, at: prev.at, err: ev.error };
       }
       rerenderLive();
-    }, { refetchInterval: 120000, cache: { staleTime: 60000 } });
+    }, { refetchInterval: q.every, cache: { staleTime: 60000 } });
   }
   async function approve(key) {
     try {
-      const r = await mcp.callTool(GMAIL, 'search_threads', GQ[key].input);
+      const r = await mcp.callTool(LQ[key].server, LQ[key].tool, LQ[key].input);
       live[key] = { data: r.payload || {}, at: Date.now(), err: null };
     } catch (err) {
       live[key] = { data: null, at: null, err };
@@ -419,17 +456,17 @@ a.row:hover .row-t { color: var(--accent); }
     const st = live[key];
     if (mcpState === 'none') return `<div class="notice">Dane na żywo działają, gdy otworzysz tę stronę w claude.ai. Teraz widzisz przykłady.</div>`;
     if (!st || !st.err) return '';
-    const e = st.err;
+    const e = st.err, s = LQ[key].server;
     const msg = {
-      needs_reauth: 'Połączenie z Gmailem wygasło. Połącz go ponownie w claude.ai: Ustawienia, potem Konektory.',
-      server_not_connected: 'Gmail nie jest podłączony. Dodaj go w claude.ai: Ustawienia, potem Konektory.',
-      selection_required: 'Masz więcej niż jedno konto Gmail. Wybierz jedno w oknie claude.ai.',
-      blocked_by_policy: 'Twoja organizacja blokuje ten odczyt Gmaila.',
-      not_in_manifest: 'Gmail jest wyłączony dla tej strony.',
-      approval_required: 'Strona potrzebuje Twojej zgody na odczyt Gmaila.',
-      server_unavailable: 'Gmail chwilowo nie odpowiada. Pokazuję ostatnie dane i spróbuję przy następnym odświeżeniu.'
-    }[e.code] || ('Odczyt Gmaila się nie udał: ' + esc(e.message || e.code) + '.');
-    const btn = e.code === 'approval_required' ? `<button class="btn primary" data-approve="${key}">Pozwól na odczyt Gmaila</button>`
+      needs_reauth: `Połączenie z ${s} wygasło. Połącz go ponownie w claude.ai: Ustawienia, potem Konektory.`,
+      server_not_connected: `${s} nie jest podłączony. Dodaj go w claude.ai: Ustawienia, potem Konektory.`,
+      selection_required: `Masz więcej niż jedno konto ${s}. Wybierz jedno w oknie claude.ai.`,
+      blocked_by_policy: `Twoja organizacja blokuje ten odczyt z ${s}.`,
+      not_in_manifest: `${s} jest wyłączony dla tej strony.`,
+      approval_required: `Strona potrzebuje Twojej zgody na odczyt z ${s}.`,
+      server_unavailable: `${s} chwilowo nie odpowiada. Pokazuję ostatnie dane i spróbuję przy następnym odświeżeniu.`
+    }[e.code] || (`Odczyt z ${s} się nie udał: ` + esc(e.message || e.code) + '.');
+    const btn = e.code === 'approval_required' ? `<button class="btn primary" data-approve="${key}">Pozwól na odczyt z ${s}</button>`
       : e.code === 'not_in_manifest' ? `<button class="btn" data-manage="1">Otwórz uprawnienia</button>` : '';
     return `<div class="notice ${st.data ? 'soft' : 'bad'}"><span>${msg}</span>${btn}</div>`;
   }
@@ -516,6 +553,34 @@ a.row:hover .row-t { color: var(--accent); }
               body: `<div class="kpi-sub">${esc(live.unread.err.code === 'approval_required' ? 'Potrzebna zgoda na odczyt' : 'Zobacz okno Gmail')}</div>` };
           }
         }
+        const livePill = `<span class="pill ok"><span class="live-dot"></span>na żywo</span>`;
+        if (it.cfg.k === 'overdue') {
+          ensureWatch('overdue');
+          const tasks = overdueTasks();
+          if (tasks) {
+            const more = live.overdue.data.has_more ? '+' : '';
+            const high = tasks.filter((t) => t.prio === 'High').length;
+            const week = tasks.filter((t) => t.late != null && t.late <= 7).length;
+            return {
+              title: 'Zadania po terminie', cls: 'st-' + (high ? 'crit' : tasks.length ? 'warn' : 'ok'), meta: livePill,
+              body: `<div class="kpi-num"><b>${tasks.length}${more}</b><span>w Notion</span></div>` +
+                `<div class="kpi-sub">${high} z wysokim priorytetem, ${week} z ostatnich 7 dni</div>`
+            };
+          }
+        }
+        if (it.cfg.k === 'grokq') {
+          ensureWatch('kolejka');
+          const rows = rowsOf('kolejka');
+          if (rows) {
+            const c = (s) => rows.filter((r) => r.Status === s).length;
+            const bad = c('Błąd'), ask = c('Pytanie');
+            return {
+              title: 'Kolejka X', cls: 'st-' + (bad ? 'crit' : ask ? 'warn' : 'ok'), meta: livePill,
+              body: `<div class="kpi-num"><b>${c('Do pobrania')}</b><span>do pobrania</span></div>` +
+                `<div class="kpi-sub">W toku ${c('W toku')}, pytania ${ask}, błędy ${bad}</div>`
+            };
+          }
+        }
         const d = KPI[it.cfg.k];
         const lbl = { ok: 'w normie', warn: 'uwaga', crit: 'pilne' }[d.state];
         return {
@@ -534,9 +599,21 @@ a.row:hover .row-t { color: var(--accent); }
             src: 'gmail', p: t.important ? 'warn' : 'ok', live: true, url: t.url,
             t: esc(t.subject), s: esc(t.sender), age: esc(ago(t.date))
           }));
-          const rank = { crit: 0, warn: 1, ok: 2 };
-          items = items.filter((q) => q.src !== 'gmail').concat(real).sort((a, b) => rank[a.p] - rank[b.p]);
+          items = items.filter((q) => q.src !== 'gmail').concat(real);
         }
+        ensureWatch('overdue');
+        const tasks = overdueTasks();
+        if (tasks) {
+          // Najpilniejsze zadania po terminie z Notion zastępują przykład z Notion.
+          const rp = { High: 0, Medium: 1, Low: 2 };
+          const top = [...tasks].sort((a, b) => (rp[a.prio] ?? 3) - (rp[b.prio] ?? 3) || (a.late ?? 0) - (b.late ?? 0)).slice(0, 3);
+          items = items.filter((q) => q.src !== 'notion').concat(top.map((t) => ({
+            src: 'notion', p: PRIO[t.prio] || 'warn', live: true, url: t.url,
+            t: esc(t.name), s: esc(t.late != null ? `po terminie od ${t.late} dni` : 'po terminie'), age: esc(dayFmt(t.due))
+          })));
+        }
+        const rank = { crit: 0, warn: 1, ok: 2 };
+        items.sort((a, b) => rank[a.p] - rank[b.p]);
         return {
           title: 'Czeka na Ciebie', meta: `${items.length} spraw`,
           body: `<ol class="list">${items.map((q) => `<li><a class="row p-${q.p}${q.live ? ' live-row' : ''}" href="${q.url || SRC[q.src].url}" target="_blank" rel="noopener">` +
@@ -599,11 +676,36 @@ a.row:hover .row-t { color: var(--accent); }
           title: 'Kalendarz na dziś', meta: `${CAL.length} spotkania`,
           body: `<ul class="list cal">${CAL.map((c) => `<li class="${c.now ? 'now' : ''}"><time>${c.at}</time><span class="row-t">${c.t}</span>${srcChip(c.src)}</li>`).join('')}</ul>`
         };
-      case 'grok':
+      case 'grok': {
+        ensureWatch('kolejka');
+        const rows = rowsOf('kolejka');
+        if (rows) {
+          const sorted = [...rows].sort((a, b) => ((XST[a.Status] || ['', 5])[1]) - ((XST[b.Status] || ['', 5])[1]));
+          return {
+            title: 'Kolejka X', meta: `${rows.length} · ${liveMeta('kolejka')}`,
+            body: notice('kolejka') + (sorted.length ? `<ul class="list">${sorted.map((r) => {
+              const [cls] = XST[r.Status] || ['muted'];
+              return `<li><a class="row p-ok" href="${notionUrl(r.url)}" target="_blank" rel="noopener"><span class="row-t">${esc(r.Zlecenie || '(bez nazwy)')}</span>` +
+                `<span class="pill ${cls}">${esc(r.Status || 'brak')}</span></a></li>`;
+            }).join('')}</ul>` : '<p class="empty">Kolejka jest pusta.</p>')
+          };
+        }
         return {
-          title: 'Kolejka X', meta: 'Grok · 7:30',
-          body: `<ul class="list">${GROK.map((g) => `<li><div class="row p-ok"><span class="row-t">${g.t}</span><span class="pill ${g.cls}">${g.st}</span></div></li>`).join('')}</ul>`
+          title: 'Kolejka X', meta: liveMeta('kolejka'),
+          body: notice('kolejka') + `<ul class="list">${GROK.map((g) => `<li><div class="row p-ok"><span class="row-t">${g.t}</span><span class="pill ${g.cls}">${g.st}</span></div></li>`).join('')}</ul>`
         };
+      }
+      case 'tasks': {
+        ensureWatch('overdue');
+        const tasks = overdueTasks();
+        const body = tasks
+          ? (tasks.length ? `<ul class="list">${tasks.map((t) => `<li><a class="row p-${PRIO[t.prio] || 'ok'}" href="${t.url}" target="_blank" rel="noopener">` +
+              `<span class="row-t">${esc(t.name)}</span><span class="row-age">${esc(dayFmt(t.due))}</span>` +
+              `<span class="row-s">${t.prio ? `<span>priorytet ${esc(PRIO_PL[t.prio] || t.prio)}</span>` : ''}<span>${t.late != null ? t.late + ' dni po terminie' : ''}</span></span></a></li>`).join('')}</ul>`
+              : '<p class="empty">Nic nie jest po terminie.</p>')
+          : (mcpState === 'ready' && !(live.overdue && live.overdue.err) ? '<p class="empty">Wczytuję zadania…</p>' : '<p class="empty">Tu pojawią się zadania po terminie z Tasks Tracker.</p>');
+        return { title: 'Zadania po terminie', meta: (tasks ? tasks.length + ' · ' : '') + liveMeta('overdue'), body: notice('overdue') + body };
+      }
       case 'note':
         return {
           title: 'Notatka', meta: '',
@@ -866,12 +968,14 @@ a.row:hover .row-t { color: var(--accent); }
     if (drag) { liveDirty = true; return; }
     liveDirty = false;
     for (const it of L()) {
-      if (it.type === 'gmail' || it.type === 'queue' || (it.type === 'kpi' && it.cfg.k === 'gmail')) refresh(it.id);
+      if (['gmail', 'queue', 'grok', 'tasks'].includes(it.type) || (it.type === 'kpi' && ['gmail', 'overdue', 'grokq'].includes(it.cfg.k))) refresh(it.id);
     }
     const tag = document.getElementById('liveTag');
-    const ok = live.unread && live.unread.data;
-    tag.classList.toggle('live', !!ok);
-    tag.textContent = ok ? `Gmail na żywo · ${hhmm(live.unread.at)} · reszta to przykłady` : 'Makieta · przykładowe dane';
+    const on = [];
+    if (Object.keys(GQ).some((k2) => live[k2] && live[k2].data)) on.push('Gmail');
+    if (['overdue', 'kolejka'].some((k2) => live[k2] && live[k2].data)) on.push('Notion');
+    tag.classList.toggle('live', on.length > 0);
+    tag.textContent = on.length ? `Na żywo: ${on.join(' i ')} · reszta to przykłady` : 'Makieta · przykładowe dane';
   }
 
   board.addEventListener('click', async (e) => {
