@@ -163,6 +163,22 @@ a.row:hover .row-t { color: var(--accent); }
 .t-note textarea { width: 100%; height: 100%; min-height: 80px; resize: none; border: 0; background: transparent; color: var(--ink); font: inherit; line-height: 1.5; padding: 0; }
 .t-note textarea:focus-visible { outline: none; }
 
+/* Gmail na żywo */
+.tag.live { background: var(--ok-soft); color: var(--ok); }
+.live-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--ok); margin-right: 5px; vertical-align: 1px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+.chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 3px 10px; font-size: 12px; cursor: pointer; color: var(--muted); }
+.chip[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+.mail .row-t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mail .unread .row-t { font-weight: 600; }
+.mail .unread .row-t::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-right: 7px; vertical-align: 1px; }
+.mail .snip { grid-column: 1 / -1; font-size: 12.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.notice { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; padding: 10px 12px; border-radius: 8px; background: var(--sunk); border: 1px solid var(--line); font-size: 13px; margin-bottom: 8px; }
+.notice.bad { background: var(--crit-soft); border-color: transparent; color: var(--ink); }
+.notice.soft { background: var(--warn-soft); border-color: transparent; }
+.empty { color: var(--muted); font-size: 13px; padding: 8px 0; }
+.row.live-row .row-age::after { content: " · na żywo"; color: var(--ok); }
+
 .pagefoot { color: var(--muted); font-size: 13px; }
 
 @media (prefers-reduced-motion: reduce) { .board:not(.stack) .w { transition: none; } }
@@ -191,7 +207,7 @@ a.row:hover .row-t { color: var(--accent); }
   </header>
 
   <div class="hint">
-    <span class="tag">Makieta · przykładowe dane</span>
+    <span class="tag" id="liveTag">Makieta · przykładowe dane</span>
     <span id="hintText">Kliknij „Układaj okna”. Potem przeciągnij okno za nagłówek, a róg w prawym dolnym rogu zmienia rozmiar.</span>
   </div>
 
@@ -273,7 +289,8 @@ a.row:hover .row-t { color: var(--accent); }
     brief:     { name: 'Streszczenie dnia', desc: 'Kilka zdań od AI o tym, co dziś ważne.', w: 5, h: 4, minW: 3, minH: 3 },
     calendar:  { name: 'Kalendarz na dziś', desc: 'Spotkania z Outlooka i Teams.', w: 3, h: 4, minW: 2, minH: 3 },
     grok:      { name: 'Kolejka X', desc: 'Zlecenia dla Groka i ich stan.', w: 4, h: 4, minW: 3, minH: 3 },
-    note:      { name: 'Notatka', desc: 'Miejsce na szybki zapis.', w: 3, h: 4, minW: 2, minH: 2 }
+    note:      { name: 'Notatka', desc: 'Miejsce na szybki zapis.', w: 3, h: 4, minW: 2, minH: 2 },
+    gmail:     { name: 'Lista: Gmail', desc: 'Najnowsze wątki z Twojej skrzynki, na żywo.', w: 4, h: 7, minW: 3, minH: 3 }
   };
 
   const k = (id, key, x, y, w = 2, h = 2) => ({ id, type: 'kpi', cfg: { k: key }, x, y, w, h });
@@ -281,13 +298,14 @@ a.row:hover .row-t { color: var(--accent); }
     all: [
       k('a1', 'gmail', 0, 0), k('a2', 'outlook', 2, 0), k('a3', 'teams', 4, 0),
       k('a4', 'ai', 6, 0), k('a5', 'overdue', 8, 0), k('a6', 'grokq', 10, 0),
-      { id: 'a7', type: 'queue', cfg: { area: 'all' }, x: 0, y: 2, w: 5, h: 7 },
-      { id: 'a8', type: 'chats', cfg: { area: 'all' }, x: 5, y: 2, w: 4, h: 7 },
-      { id: 'a9', type: 'shortcuts', x: 9, y: 2, w: 3, h: 3 },
-      { id: 'a10', type: 'calendar', x: 9, y: 5, w: 3, h: 4 },
-      { id: 'a11', type: 'brief', x: 0, y: 9, w: 5, h: 4 },
-      { id: 'a12', type: 'grok', x: 5, y: 9, w: 4, h: 4 },
-      { id: 'a13', type: 'note', x: 9, y: 9, w: 3, h: 4 }
+      { id: 'a7', type: 'queue', cfg: { area: 'all' }, x: 0, y: 2, w: 4, h: 7 },
+      { id: 'a14', type: 'gmail', cfg: { filter: 'unread' }, x: 4, y: 2, w: 4, h: 7 },
+      { id: 'a9', type: 'shortcuts', x: 8, y: 2, w: 4, h: 3 },
+      { id: 'a10', type: 'calendar', x: 8, y: 5, w: 4, h: 4 },
+      { id: 'a8', type: 'chats', cfg: { area: 'all' }, x: 0, y: 9, w: 4, h: 6 },
+      { id: 'a11', type: 'brief', x: 4, y: 9, w: 4, h: 5 },
+      { id: 'a12', type: 'grok', x: 8, y: 9, w: 4, h: 4 },
+      { id: 'a13', type: 'note', x: 8, y: 13, w: 4, h: 3 }
     ],
     praca: [
       k('p1', 'outlook', 0, 0, 3), k('p2', 'teams', 3, 0, 3), k('p3', 'overdue', 6, 0, 3), k('p4', 'ai', 9, 0, 3),
@@ -299,11 +317,12 @@ a.row:hover .row-t { color: var(--accent); }
     ],
     dom: [
       k('d1', 'gmail', 0, 0, 4), k('d2', 'ai', 4, 0, 4), k('d3', 'grokq', 8, 0, 4),
-      { id: 'd4', type: 'queue', cfg: { area: 'dom' }, x: 0, y: 2, w: 6, h: 6 },
-      { id: 'd5', type: 'chats', cfg: { area: 'dom' }, x: 6, y: 2, w: 6, h: 6 },
-      { id: 'd6', type: 'grok', x: 0, y: 8, w: 4, h: 4 },
-      { id: 'd7', type: 'note', x: 4, y: 8, w: 4, h: 4 },
-      { id: 'd8', type: 'shortcuts', x: 8, y: 8, w: 4, h: 3 }
+      { id: 'd9', type: 'gmail', cfg: { filter: 'primary' }, x: 0, y: 2, w: 6, h: 7 },
+      { id: 'd4', type: 'queue', cfg: { area: 'dom' }, x: 6, y: 2, w: 6, h: 7 },
+      { id: 'd5', type: 'chats', cfg: { area: 'dom' }, x: 0, y: 9, w: 6, h: 6 },
+      { id: 'd6', type: 'grok', x: 6, y: 9, w: 3, h: 4 },
+      { id: 'd7', type: 'note', x: 9, y: 9, w: 3, h: 4 },
+      { id: 'd8', type: 'shortcuts', x: 6, y: 13, w: 6, h: 3 }
     ]
   };
 
@@ -315,7 +334,113 @@ a.row:hover .row-t { color: var(--accent); }
   const clone = (o) => JSON.parse(JSON.stringify(o));
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-  let layouts = store.get('cd-layouts-v1', null);
+  // Gmail na żywo: konektor Gmail z claude.ai, tylko odczyt.
+  const GMAIL = 'Gmail';
+  const GQ = {
+    unread:  { label: 'Nieprzeczytane', input: { query: 'in:inbox is:unread', pageSize: 50 } },
+    primary: { label: 'Główne',         input: { query: 'in:inbox category:primary newer_than:14d', pageSize: 25 } },
+    all:     { label: 'Wszystkie',      input: { query: 'in:inbox newer_than:7d', pageSize: 25 } }
+  };
+  const live = {};        // klucz zapytania -> { data, at, err }
+  const watching = {};
+  let mcp = null, mcpState = 'waiting';   // waiting | ready | none
+
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const safeUrl = (u) => (typeof u === 'string' && u.startsWith('https://mail.google.com/')) ? u : 'https://mail.google.com';
+  const senderName = (s) => { const m = String(s || '').match(/^\s*"?([^"<]+?)"?\s*<[^>]+>\s*$/); return (m ? m[1] : String(s || '')).trim() || 'Nieznany nadawca'; };
+  const hhmm = (ms) => new Date(ms).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
+  function ago(iso) {
+    const t = Date.parse(iso);
+    if (!t) return '';
+    const min = Math.round((Date.now() - t) / 60000);
+    if (min < 1) return 'teraz';
+    if (min < 60) return min + ' min';
+    const h = Math.round(min / 60);
+    if (h < 24) return h + ' godz.';
+    const d = Math.round(h / 24);
+    if (d < 7) return d === 1 ? '1 dzień' : d + ' dni';
+    return new Date(t).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' });
+  }
+  function threadInfo(th) {
+    const msgs = Array.isArray(th.messages) ? th.messages : [];
+    const first = msgs[0] || {}, last = msgs[msgs.length - 1] || first;
+    const labels = new Set(msgs.flatMap((m) => m.labelIds || []));
+    const cat = [...labels].find((l) => l.startsWith('CATEGORY_'));
+    return {
+      subject: first.subject || '(bez tematu)', sender: senderName(last.sender), date: last.date,
+      snippet: last.snippet || '', url: safeUrl(th.viewUrl || last.viewUrl),
+      unread: labels.has('UNREAD'), important: labels.has('IMPORTANT'),
+      primary: !cat || cat === 'CATEGORY_PERSONAL'
+    };
+  }
+  const threadsOf = (key) => { const d = live[key] && live[key].data; return d && Array.isArray(d.threads) ? d.threads.map(threadInfo) : (d ? [] : null); };
+
+  const DENIALS = ['needs_reauth', 'server_not_connected', 'selection_required', 'blocked_by_policy', 'approval_required', 'not_in_manifest', 'not_granted', 'capability_disabled', 'capability_removed', 'consent_required'];
+  function ensureWatch(key) {
+    if (mcpState !== 'ready' || watching[key]) return;
+    watching[key] = mcp.watchTool(GMAIL, 'search_threads', GQ[key].input, (ev) => {
+      if (ev.type === 'data') {
+        live[key] = { data: ev.result.payload || {}, at: (ev.result.cache && ev.result.cache.storedAt) || Date.now(), err: null };
+        if (key === 'unread') recordUnread();
+      } else {
+        const prev = live[key] || {};
+        const denied = DENIALS.includes(ev.error.code);
+        live[key] = { data: denied ? null : prev.data, at: prev.at, err: ev.error };
+      }
+      rerenderLive();
+    }, { refetchInterval: 120000, cache: { staleTime: 60000 } });
+  }
+  async function approve(key) {
+    try {
+      const r = await mcp.callTool(GMAIL, 'search_threads', GQ[key].input);
+      live[key] = { data: r.payload || {}, at: Date.now(), err: null };
+    } catch (err) {
+      live[key] = { data: null, at: null, err };
+    }
+    rerenderLive();
+  }
+  function unreadCount() {
+    const d = live.unread && live.unread.data;
+    if (!d) return null;
+    const n = Array.isArray(d.threads) ? d.threads.length : 0;
+    const est = parseInt(d.resultCountEstimate, 10);
+    return Number.isFinite(est) && est >= n ? est : n;
+  }
+  // Historia liczby nieprzeczytanych z 7 dni, tylko w tej przeglądarce.
+  function recordUnread() {
+    const n = unreadCount();
+    if (n == null) return;
+    const hist = store.get('cd-gmail-hist', {});
+    hist[new Date().toISOString().slice(0, 10)] = n;
+    const keys = Object.keys(hist).sort().slice(-7);
+    store.set('cd-gmail-hist', Object.fromEntries(keys.map((x) => [x, hist[x]])));
+  }
+  function notice(key) {
+    const st = live[key];
+    if (mcpState === 'none') return `<div class="notice">Dane na żywo działają, gdy otworzysz tę stronę w claude.ai. Teraz widzisz przykłady.</div>`;
+    if (!st || !st.err) return '';
+    const e = st.err;
+    const msg = {
+      needs_reauth: 'Połączenie z Gmailem wygasło. Połącz go ponownie w claude.ai: Ustawienia, potem Konektory.',
+      server_not_connected: 'Gmail nie jest podłączony. Dodaj go w claude.ai: Ustawienia, potem Konektory.',
+      selection_required: 'Masz więcej niż jedno konto Gmail. Wybierz jedno w oknie claude.ai.',
+      blocked_by_policy: 'Twoja organizacja blokuje ten odczyt Gmaila.',
+      not_in_manifest: 'Gmail jest wyłączony dla tej strony.',
+      approval_required: 'Strona potrzebuje Twojej zgody na odczyt Gmaila.',
+      server_unavailable: 'Gmail chwilowo nie odpowiada. Pokazuję ostatnie dane i spróbuję przy następnym odświeżeniu.'
+    }[e.code] || ('Odczyt Gmaila się nie udał: ' + esc(e.message || e.code) + '.');
+    const btn = e.code === 'approval_required' ? `<button class="btn primary" data-approve="${key}">Pozwól na odczyt Gmaila</button>`
+      : e.code === 'not_in_manifest' ? `<button class="btn" data-manage="1">Otwórz uprawnienia</button>` : '';
+    return `<div class="notice ${st.data ? 'soft' : 'bad'}"><span>${msg}</span>${btn}</div>`;
+  }
+  function liveMeta(key) {
+    const st = live[key];
+    if (st && st.data && st.at) return `<span class="live-dot"></span>${hhmm(st.at)}`;
+    if (mcpState === 'ready') return 'ładuję…';
+    return 'przykład';
+  }
+
+  let layouts = store.get('cd-layouts-v2', null);
   if (!layouts || !layouts.all || !layouts.praca || !layouts.dom) layouts = clone(DEFAULTS);
   let screen = store.get('cd-screen', 'all');
   if (!layouts[screen]) screen = 'all';
@@ -334,7 +459,7 @@ a.row:hover .row-t { color: var(--accent); }
     new Date().toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'long' });
 
   const L = () => layouts[screen];
-  const save = () => { store.set('cd-layouts-v1', layouts); store.set('cd-screen', screen); };
+  const save = () => { store.set('cd-layouts-v2', layouts); store.set('cd-screen', screen); };
   const narrow = () => window.innerWidth < NARROW;
   const srcChip = (key) => `<span class="src" style="--c:var(${SRC[key].c})">${SRC[key].n}</span>`;
 
@@ -371,6 +496,26 @@ a.row:hover .row-t { color: var(--accent); }
     const inArea = (x) => area === 'all' || x.area === area;
     switch (it.type) {
       case 'kpi': {
+        if (it.cfg.k === 'gmail') {
+          ensureWatch('unread');
+          const th = threadsOf('unread');
+          if (th) {
+            const n = unreadCount(), more = th.length >= 50 && n === th.length ? '+' : '';
+            const prim = th.filter((t) => t.primary).length, imp = th.filter((t) => t.important).length;
+            const state = imp > 0 ? 'warn' : prim > 0 ? 'warn' : 'ok';
+            const hist = Object.values(store.get('cd-gmail-hist', {}));
+            return {
+              title: 'Gmail prywatny', cls: 'st-' + state,
+              meta: `<span class="pill ok"><span class="live-dot"></span>na żywo</span>`,
+              body: `<div class="kpi-num"><b>${n}${more}</b><span>nieprzeczytanych</span></div>` +
+                `<div class="kpi-sub">${prim} w głównych, ${imp} ważnych</div>${hist.length > 1 ? spark(hist) : ''}`
+            };
+          }
+          if (live.unread && live.unread.err) {
+            return { title: 'Gmail prywatny', cls: 'st-warn', meta: '<span class="pill warn">brak danych</span>',
+              body: `<div class="kpi-sub">${esc(live.unread.err.code === 'approval_required' ? 'Potrzebna zgoda na odczyt' : 'Zobacz okno Gmail')}</div>` };
+          }
+        }
         const d = KPI[it.cfg.k];
         const lbl = { ok: 'w normie', warn: 'uwaga', crit: 'pilne' }[d.state];
         return {
@@ -380,13 +525,45 @@ a.row:hover .row-t { color: var(--accent); }
         };
       }
       case 'queue': {
-        const items = QUEUE.filter(inArea);
+        let items = QUEUE.filter(inArea);
+        if (area !== 'praca') ensureWatch('unread');
+        const th = area !== 'praca' ? threadsOf('unread') : null;
+        if (th) {
+          // Prawdziwe nieprzeczytane maile z głównych zastępują przykłady z Gmaila.
+          const real = th.filter((t) => t.primary).slice(0, 4).map((t) => ({
+            src: 'gmail', p: t.important ? 'warn' : 'ok', live: true, url: t.url,
+            t: esc(t.subject), s: esc(t.sender), age: esc(ago(t.date))
+          }));
+          const rank = { crit: 0, warn: 1, ok: 2 };
+          items = items.filter((q) => q.src !== 'gmail').concat(real).sort((a, b) => rank[a.p] - rank[b.p]);
+        }
         return {
           title: 'Czeka na Ciebie', meta: `${items.length} spraw`,
-          body: `<ol class="list">${items.map((q) => `<li><a class="row p-${q.p}" href="${SRC[q.src].url}" target="_blank" rel="noopener">` +
+          body: `<ol class="list">${items.map((q) => `<li><a class="row p-${q.p}${q.live ? ' live-row' : ''}" href="${q.url || SRC[q.src].url}" target="_blank" rel="noopener">` +
             `<span class="row-t">${q.t}</span><span class="row-age">${q.age}</span>` +
             `<span class="row-s">${srcChip(q.src)}<span>${q.s}</span></span></a></li>`).join('')}</ol>`
         };
+      }
+      case 'gmail': {
+        const key = (it.cfg && GQ[it.cfg.filter]) ? it.cfg.filter : 'unread';
+        ensureWatch(key);
+        const chips = `<div class="chips" role="group" aria-label="Filtr">${Object.entries(GQ).map(([k2, q]) =>
+          `<button class="chip" data-gfilter="${k2}" data-wid="${it.id}" aria-pressed="${k2 === key}">${q.label}</button>`).join('')}</div>`;
+        const th = threadsOf(key);
+        let list;
+        if (th) {
+          list = th.length
+            ? `<ul class="list mail">${th.slice(0, 25).map((t) => `<li class="${t.unread ? 'unread' : ''}"><a class="row ${t.important ? 'p-warn' : 'p-ok'}" href="${t.url}" target="_blank" rel="noopener">` +
+              `<span class="row-t">${esc(t.subject)}</span><span class="row-age">${esc(ago(t.date))}</span>` +
+              `<span class="snip">${esc(t.sender)} · ${esc(t.snippet)}</span></a></li>`).join('')}</ul>`
+            : `<p class="empty">Nic tu nie ma. Skrzynka jest czysta.</p>`;
+        } else if (mcpState === 'ready' && !(live[key] && live[key].err)) {
+          list = `<p class="empty">Wczytuję skrzynkę…</p>`;
+        } else {
+          list = `<ul class="list mail">${QUEUE.filter((q) => q.src === 'gmail').map((q) => `<li class="unread"><div class="row p-${q.p}"><span class="row-t">${q.t}</span><span class="row-age">${q.age}</span><span class="snip">Przykład · ${q.s}</span></div></li>`).join('')}</ul>`;
+        }
+        const n = th ? th.length : null;
+        return { title: 'Gmail', meta: (n != null ? n + ' · ' : '') + liveMeta(key), body: chips + notice(key) + list };
       }
       case 'chats': {
         const items = CHATS.filter(inArea);
@@ -577,6 +754,7 @@ a.row:hover .row-t { color: var(--accent); }
     drag = null;
     layoutAll();
     save();
+    if (liveDirty) rerenderLive();
   }
 
   function keyMove(e, id) {
@@ -683,7 +861,33 @@ a.row:hover .row-t { color: var(--accent); }
     renderBoard();
   }));
 
-  board.addEventListener('click', (e) => {
+  let liveDirty = false;
+  function rerenderLive() {
+    if (drag) { liveDirty = true; return; }
+    liveDirty = false;
+    for (const it of L()) {
+      if (it.type === 'gmail' || it.type === 'queue' || (it.type === 'kpi' && it.cfg.k === 'gmail')) refresh(it.id);
+    }
+    const tag = document.getElementById('liveTag');
+    const ok = live.unread && live.unread.data;
+    tag.classList.toggle('live', !!ok);
+    tag.textContent = ok ? `Gmail na żywo · ${hhmm(live.unread.at)} · reszta to przykłady` : 'Makieta · przykładowe dane';
+  }
+
+  board.addEventListener('click', async (e) => {
+    const f = e.target.closest('[data-gfilter]');
+    if (f) {
+      const it = L().find((i) => i.id === f.dataset.wid);
+      if (it) { it.cfg = { ...(it.cfg || {}), filter: f.dataset.gfilter }; save(); refresh(it.id); }
+      return;
+    }
+    const ap = e.target.closest('[data-approve]');
+    if (ap) { ap.disabled = true; approve(ap.dataset.approve); return; }
+    if (e.target.closest('[data-manage]')) {
+      const perms = await window.claude?.use?.('permissions');
+      if (perms) perms.manage().then(() => location.reload(), () => {});
+      return;
+    }
     const b = e.target.closest('[data-chat]');
     if (!b) return;
     const c = CHATS.find((x) => x.id === b.dataset.chat);
@@ -702,5 +906,13 @@ a.row:hover .row-t { color: var(--accent); }
   buildMenu();
   renderBoard();
   setEditing(false);
+
+  // Konektor odpowiada później niż pierwszy rysunek strony. Do tego czasu widać przykłady.
+  const useMcp = window.claude && typeof window.claude.use === 'function' ? window.claude.use('mcp') : Promise.resolve(null);
+  useMcp.then((ns) => {
+    mcp = ns;
+    mcpState = ns ? 'ready' : 'none';
+    renderBoard();
+  }, () => { mcpState = 'none'; renderBoard(); });
 })();
 </script>
