@@ -10,22 +10,12 @@
 # Opcjonalne:
 #   TOPIC                 temat rozmowy, trafia do promptu jako {{temat}}
 #   MAX_DURATION_SECONDS  maksymalna długość rozmowy (domyślnie 180)
-#   TARGET_HOUR           godzina (czas polski), o której ma dzwonić; gdy ustawiona
-#                         i bieżąca godzina w Warszawie jest inna, skrypt nic nie robi
 #   DRY_RUN=1             tylko wypisuje żądanie, nie dzwoni
 
 set -euo pipefail
 
 : "${MAX_DURATION_SECONDS:=180}"
 : "${TOPIC:=}"
-
-if [[ -n "${TARGET_HOUR:-}" ]]; then
-  current_hour=$(TZ=Europe/Warsaw date +%-H)
-  if [[ "$current_hour" != "$TARGET_HOUR" ]]; then
-    echo "W Warszawie jest teraz ${current_hour}:xx, a połączenie ma być o ${TARGET_HOUR}:xx. Pomijam."
-    exit 0
-  fi
-fi
 
 for name in VAPI_API_KEY VAPI_ASSISTANT_ID VAPI_PHONE_NUMBER_ID MY_PHONE_NUMBER; do
   if [[ -z "${!name:-}" ]]; then

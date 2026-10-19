@@ -1,8 +1,11 @@
-# AI dzwoni do mnie (Vapi + GitHub Actions)
+# AI dzwoni na telefon (Vapi + GitHub Actions)
 
-Workflow `.github/workflows/vapi-call.yml` w dni robocze o ok. 8:05 czasu polskiego
-prosi Vapi o połączenie na twój numer. Rozmowę prowadzi asystent skonfigurowany w Vapi.
+Workflow `.github/workflows/ai-kontakt.yml` („AI się odzywa”) w dni robocze o ok. 8:05
+czasu polskiego prosi Vapi o połączenie na twój numer, gdy zmienna `CHANNEL` to `telefon`
+(albo gdy jej nie ma). Rozmowę prowadzi asystent skonfigurowany w Vapi.
 Możesz też zadzwonić „na żądanie” z zakładki **Actions**.
+
+Wersja na Telegram: [ai-telegram.md](ai-telegram.md).
 
 ## 1. Przygotuj Vapi
 
@@ -37,7 +40,8 @@ Opcjonalnie w zakładce **Variables** możesz dodać `MAX_DURATION_SECONDS`
 
 ## 3. Uruchom
 
-- **Na żądanie:** Actions → „AI dzwoni (Vapi)” → **Run workflow** (możesz wpisać temat).
+- **Na żądanie:** Actions → „AI się odzywa (telefon / Telegram)” → **Run workflow**,
+  kanał `telefon` (możesz wpisać temat).
 - **Automatycznie:** w dni robocze o ok. 8:05. GitHub potrafi opóźnić zaplanowane
   zadania o kilka–kilkanaście minut.
 
@@ -47,10 +51,10 @@ jest na domyślnej gałęzi repozytorium.
 ### Zmiana godziny
 
 GitHub liczy `cron` w UTC, a Polska ma czas letni (UTC+2) i zimowy (UTC+1).
-Dlatego workflow startuje dwa razy (6:05 i 7:05 UTC), a skrypt dzwoni tylko wtedy,
-gdy w Warszawie jest 8:xx. Żeby dzwonił np. o 18:
+Dlatego workflow startuje dwa razy (6:05 i 7:05 UTC), a odzywa się tylko wtedy,
+gdy w Warszawie jest 8:xx. Żeby odzywał się np. o 18, w `ai-kontakt.yml`:
 - w `cron` wpisz godziny `16,17`,
-- w `TARGET_HOUR` wpisz `'18'`.
+- w `TARGET_HOUR` wpisz `"18"`.
 
 ## Test bez dzwonienia
 
