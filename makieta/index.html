@@ -1,0 +1,706 @@
+<title>Centrum dowodzenia</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Układ: górny pasek z zakładkami ekranów, pod nim siatka 12 kolumn z oknami, które przesuwasz i powiększasz. */
+:root {
+  --bg: #E9EDF1; --surface: #FFFFFF; --sunk: #F3F5F8; --ink: #17212C; --muted: #5B6876; --line: #D3DAE2;
+  --accent: #2F55C8; --accent-ink: #FFFFFF; --accent-soft: #E3E9FA; --guide: rgba(47, 85, 200, .06);
+  --ok: #1E7F52; --ok-soft: #DFF1E7; --warn: #A86A00; --warn-soft: #FBEFD6; --crit: #C0362C; --crit-soft: #F9E1DE;
+  --s1: #D9534F; --s2: #2F6FDB; --s3: #6A5ACD; --s4: #1E9E78; --s5: #0F7C8C; --s6: #C7743A; --s7: #4A4F57; --s8: #8A6D3B;
+  --shadow: 0 1px 2px rgba(23, 33, 44, .06), 0 4px 14px rgba(23, 33, 44, .06);
+  --shadow-lift: 0 10px 30px rgba(23, 33, 44, .18);
+  --f-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E1318; --surface: #161D25; --sunk: #1B232D; --ink: #E4E9EF; --muted: #94A1AF; --line: #29333F;
+    --accent: #7F9BFF; --accent-ink: #0E1318; --accent-soft: #1F2945; --guide: rgba(127, 155, 255, .06);
+    --ok: #4CC08A; --ok-soft: #14302A; --warn: #E3A93B; --warn-soft: #33280F; --crit: #F0766B; --crit-soft: #3A1C1A;
+    --s1: #F07A76; --s2: #6E9BF0; --s3: #9B8CF0; --s4: #4CC7A0; --s5: #45B5C4; --s6: #E59A62; --s7: #A3AAB3; --s8: #C9A76A;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 6px 18px rgba(0, 0, 0, .25);
+    --shadow-lift: 0 14px 34px rgba(0, 0, 0, .5);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E1318; --surface: #161D25; --sunk: #1B232D; --ink: #E4E9EF; --muted: #94A1AF; --line: #29333F;
+  --accent: #7F9BFF; --accent-ink: #0E1318; --accent-soft: #1F2945; --guide: rgba(127, 155, 255, .06);
+  --ok: #4CC08A; --ok-soft: #14302A; --warn: #E3A93B; --warn-soft: #33280F; --crit: #F0766B; --crit-soft: #3A1C1A;
+  --s1: #F07A76; --s2: #6E9BF0; --s3: #9B8CF0; --s4: #4CC7A0; --s5: #45B5C4; --s6: #E59A62; --s7: #A3AAB3; --s8: #C9A76A;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 6px 18px rgba(0, 0, 0, .25);
+  --shadow-lift: 0 14px 34px rgba(0, 0, 0, .5);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 14px; line-height: 1.45; }
+body.is-dragging { user-select: none; cursor: grabbing; }
+.wrap {
+  max-width: 1440px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 16px 32px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Górny pasek */
+.top { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+.brand { display: flex; flex-direction: column; gap: 2px; min-width: 0; margin-right: auto; }
+.brand h1 { margin: 0; font-family: var(--f-display); font-weight: 700; font-size: 22px; letter-spacing: -.01em; text-wrap: balance; }
+.brand .date { color: var(--muted); font-size: 13px; }
+.tabs { display: flex; gap: 4px; background: var(--sunk); border: 1px solid var(--line); border-radius: 9px; padding: 3px; }
+.tab { border: 0; background: transparent; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-weight: 500; color: var(--muted); }
+.tab[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; position: relative; }
+.btn { border: 1px solid var(--line); background: var(--surface); padding: 7px 12px; border-radius: 8px; cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn.danger { color: var(--crit); border-color: var(--crit); }
+
+.hint { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; font-size: 13px; color: var(--muted); }
+.tag { font-family: var(--f-mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; padding: 3px 8px; border-radius: 5px; background: var(--warn-soft); color: var(--warn); }
+
+/* Menu dodawania okien */
+.menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 50; width: min(360px, calc(100vw - 32px)); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow-lift); padding: 8px; max-height: 70vh; overflow: auto; }
+.menu h3 { margin: 8px 8px 4px; font-family: var(--f-mono); font-weight: 500; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.menu button { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; width: 100%; text-align: left; border: 0; background: transparent; padding: 8px; border-radius: 7px; cursor: pointer; }
+.menu button:hover, .menu button:focus-visible { background: var(--sunk); }
+.menu button b { font-weight: 600; }
+.menu button span { color: var(--muted); font-size: 12.5px; }
+
+/* Tablica z oknami */
+.board { position: relative; min-height: 200px; }
+.editing .board { background-image: repeating-linear-gradient(to right, var(--guide) 0 var(--cw, 80px), transparent var(--cw, 80px) calc(var(--cw, 80px) + 12px)); border-radius: 10px; }
+.w { position: absolute; display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); overflow: hidden; }
+.board:not(.stack) .w { transition: left .18s ease, top .18s ease, width .18s ease, height .18s ease, box-shadow .18s; }
+.w.dragging { transition: none !important; z-index: 30; box-shadow: var(--shadow-lift); opacity: .96; }
+.ph { position: absolute; border: 2px dashed var(--accent); border-radius: 10px; background: var(--accent-soft); opacity: .7; pointer-events: none; }
+.w-head { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-bottom: 1px solid var(--line); min-height: 40px; }
+.w-title { margin: 0; font-family: var(--f-display); font-weight: 600; font-size: 14px; letter-spacing: .005em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.w-meta { margin-left: auto; font-family: var(--f-mono); font-size: 11.5px; color: var(--muted); white-space: nowrap; }
+.w-body { flex: 1; min-height: 0; overflow: auto; padding: 10px 12px; }
+.grip, .w-x { display: none; border: 0; background: transparent; padding: 2px; border-radius: 5px; cursor: pointer; color: var(--muted); line-height: 0; }
+.w-x:hover { color: var(--crit); background: var(--crit-soft); }
+.rz { display: none; position: absolute; right: 0; bottom: 0; width: 20px; height: 20px; cursor: nwse-resize; touch-action: none; }
+.rz::after { content: ""; position: absolute; right: 4px; bottom: 4px; width: 9px; height: 9px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); border-radius: 0 0 3px 0; }
+.editing .w { border-style: dashed; border-color: var(--muted); }
+.editing .w-head { cursor: grab; touch-action: none; background: var(--sunk); }
+.editing .grip { display: inline-flex; cursor: grab; }
+.editing .w-x { display: inline-flex; }
+.editing .rz { display: block; }
+.editing .w-meta { margin-left: auto; }
+.editing .t-kpi .w-meta { display: none; }
+
+.board.stack { display: flex; flex-direction: column; gap: 12px; height: auto !important; background: none; }
+.board.stack .w { position: relative; left: auto !important; top: auto !important; width: auto !important; }
+
+/* Źródła */
+.src { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); white-space: nowrap; }
+.src::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--c, var(--muted)); flex: none; }
+
+/* Kafelek */
+.t-kpi .w-head { border-bottom: 0; padding-bottom: 0; min-height: 34px; }
+.t-kpi .w-body { position: relative; overflow: hidden; padding-top: 2px; display: flex; flex-direction: column; gap: 2px; }
+.kpi-num { display: flex; align-items: baseline; gap: 6px; position: relative; z-index: 1; }
+.kpi-num b { font-family: var(--f-mono); font-weight: 500; font-size: 30px; line-height: 1; font-variant-numeric: tabular-nums; }
+.kpi-num span { color: var(--muted); font-size: 12.5px; }
+.kpi-sub { font-size: 12px; color: var(--muted); position: relative; z-index: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.spark { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 38%; }
+.sp-a { fill: var(--spark); opacity: .12; }
+.sp-l { fill: none; stroke: var(--spark); stroke-width: 1.6; }
+.st-ok { --spark: var(--ok); } .st-warn { --spark: var(--warn); } .st-crit { --spark: var(--crit); }
+.pill { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .05em; text-transform: uppercase; padding: 2px 7px; border-radius: 999px; white-space: nowrap; }
+.pill.ok { background: var(--ok-soft); color: var(--ok); }
+.pill.warn { background: var(--warn-soft); color: var(--warn); }
+.pill.crit { background: var(--crit-soft); color: var(--crit); }
+.pill.muted { background: var(--sunk); color: var(--muted); }
+.pill.acc { background: var(--accent-soft); color: var(--accent); }
+
+/* Listy */
+.list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.list li { border-bottom: 1px solid var(--line); }
+.list li:last-child { border-bottom: 0; }
+.row { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; padding: 8px 0 8px 10px; text-decoration: none; color: inherit; border-left: 3px solid transparent; }
+a.row:hover .row-t { color: var(--accent); }
+.row.p-crit { border-left-color: var(--crit); }
+.row.p-warn { border-left-color: var(--warn); }
+.row.p-ok { border-left-color: var(--line); }
+.row-t { font-weight: 500; min-width: 0; }
+.row-s { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; font-size: 12px; color: var(--muted); }
+.row-age { font-family: var(--f-mono); font-size: 11.5px; color: var(--muted); white-space: nowrap; align-self: start; padding-top: 2px; }
+.cycle { border: 0; cursor: pointer; }
+.cycle:hover { filter: brightness(.95); }
+
+/* Skróty */
+.sc { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 8px; }
+.sc a { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 4px; border-radius: 8px; border: 1px solid var(--line); text-decoration: none; color: inherit; font-size: 12px; text-align: center; background: var(--sunk); }
+.sc a:hover { border-color: var(--accent); }
+.sc i { font-style: normal; width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; font-family: var(--f-mono); font-size: 12px; font-weight: 500; color: var(--surface); background: var(--c); }
+
+/* Streszczenie */
+.brief p { margin: 0 0 8px; max-width: 65ch; }
+.brief strong { font-weight: 600; }
+.foot { font-size: 12px; color: var(--muted); }
+
+/* Kalendarz */
+.cal li { display: grid; grid-template-columns: 48px 1fr; gap: 2px 10px; padding: 7px 0; border-bottom: 1px solid var(--line); }
+.cal li:last-child { border-bottom: 0; }
+.cal time { font-family: var(--f-mono); font-size: 12.5px; font-variant-numeric: tabular-nums; padding-top: 1px; }
+.cal .now time { color: var(--accent); }
+.cal .now .row-t::after { content: " · teraz"; color: var(--accent); font-weight: 500; font-size: 12px; }
+.cal .src { grid-column: 2; }
+
+/* Notatka */
+.t-note textarea { width: 100%; height: 100%; min-height: 80px; resize: none; border: 0; background: transparent; color: var(--ink); font: inherit; line-height: 1.5; padding: 0; }
+.t-note textarea:focus-visible { outline: none; }
+
+.pagefoot { color: var(--muted); font-size: 13px; }
+
+@media (prefers-reduced-motion: reduce) { .board:not(.stack) .w { transition: none; } }
+</style>
+
+<div class="wrap" id="app">
+  <header class="top">
+    <div class="brand">
+      <h1>Centrum dowodzenia</h1>
+      <span class="date" id="today"></span>
+    </div>
+    <div class="tabs" role="tablist" aria-label="Ekrany">
+      <button class="tab" role="tab" data-screen="all" id="tab-all">Wszystko</button>
+      <button class="tab" role="tab" data-screen="praca" id="tab-praca">Praca</button>
+      <button class="tab" role="tab" data-screen="dom" id="tab-dom">Dom</button>
+    </div>
+    <div class="actions">
+      <button class="btn" id="edit" aria-pressed="false">
+        <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 4h12M1 10h12M4 1v12M10 1v12" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+        Układaj okna
+      </button>
+      <button class="btn primary" id="add" aria-haspopup="true" aria-expanded="false">+ Dodaj okno</button>
+      <button class="btn" id="reset">Przywróć układ</button>
+      <div class="menu" id="menu" hidden></div>
+    </div>
+  </header>
+
+  <div class="hint">
+    <span class="tag">Makieta · przykładowe dane</span>
+    <span id="hintText">Kliknij „Układaj okna”. Potem przeciągnij okno za nagłówek, a róg w prawym dolnym rogu zmienia rozmiar.</span>
+  </div>
+
+  <main class="board" id="board" aria-label="Okna centrum dowodzenia">
+    <div class="ph" id="ph" hidden></div>
+  </main>
+
+  <p class="pagefoot">Następny ruch: Marek ogląda makietę i pisze, co dodać, usunąć albo zmienić.</p>
+</div>
+
+<script>
+(function () {
+  const COLS = 12, ROWH = 52, GAP = 12, NARROW = 760;
+
+  const SRC = {
+    gmail:   { n: 'Gmail prywatny',   c: '--s1', ab: 'Gm', url: 'https://mail.google.com' },
+    outlook: { n: 'Poczta firmowa',   c: '--s2', ab: 'Ou', url: 'https://outlook.office.com' },
+    teams:   { n: 'Teams',            c: '--s3', ab: 'Te', url: 'https://teams.microsoft.com' },
+    gptp:    { n: 'ChatGPT prywatny', c: '--s4', ab: 'GP', url: 'https://chatgpt.com' },
+    gptf:    { n: 'ChatGPT firmowy',  c: '--s5', ab: 'GF', url: 'https://chatgpt.com' },
+    claude:  { n: 'Claude',           c: '--s6', ab: 'Cl', url: 'https://claude.ai' },
+    grok:    { n: 'Grok',             c: '--s7', ab: 'Gr', url: 'https://grok.com' },
+    notion:  { n: 'Notion',           c: '--s8', ab: 'No', url: 'https://www.notion.so' },
+    x:       { n: 'X',                c: '--s7', ab: 'X',  url: 'https://x.com' }
+  };
+
+  const KPI = {
+    gmail:   { src: 'gmail',   label: 'Gmail prywatny',     value: 12, unit: 'nieprzeczytanych', sub: '3 oznaczone jako ważne',          state: 'warn', series: [4, 6, 5, 8, 7, 9, 12] },
+    outlook: { src: 'outlook', label: 'Poczta firmowa',     value: 7,  unit: 'bez odpowiedzi',   sub: '2 od klientów, najstarszy 3 dni', state: 'crit', series: [3, 4, 4, 6, 5, 6, 7] },
+    teams:   { src: 'teams',   label: 'Teams',              value: 4,  unit: 'wzmianki',         sub: '1 czat czeka 2 godziny',          state: 'warn', series: [1, 2, 1, 3, 2, 5, 4] },
+    ai:      { src: 'claude',  label: 'Czaty AI',           value: 23, unit: 'otwartych',        sub: 'ChatGPT 11, Claude 8, Grok 4',    state: 'warn', series: [12, 14, 15, 17, 19, 21, 23] },
+    overdue: { src: 'notion',  label: 'Zadania po terminie', value: 27, unit: 'w Notion',        sub: '5 z terminem w tym tygodniu',     state: 'crit', series: [15, 18, 20, 22, 24, 26, 27] },
+    grokq:   { src: 'grok',    label: 'Kolejka X',          value: 7,  unit: 'do pobrania',      sub: 'Grok rusza jutro o 7:30',         state: 'ok',   series: [2, 3, 5, 4, 6, 5, 7] }
+  };
+
+  const QUEUE = [
+    { src: 'outlook', area: 'praca', p: 'crit', t: 'Klient pyta o termin wyceny raportu', s: 'Odpowiedz z datą wyceny', age: '3 dni' },
+    { src: 'gmail',   area: 'dom',   p: 'crit', t: 'Wykonawca schodów: potwierdź start prac', s: 'Termin: jutro', age: 'dziś' },
+    { src: 'teams',   area: 'praca', p: 'warn', t: 'Andrzej pyta, czy wysyłamy filmiki z warsztatu', s: 'Decyzja: tak albo nie', age: '2 godz.' },
+    { src: 'claude',  area: 'dom',   p: 'warn', t: 'Plan kokpitu czeka na Twoją decyzję', s: 'Wybierz: makieta albo budowa', age: '10 min' },
+    { src: 'gptf',    area: 'praca', p: 'warn', t: 'Nieskończony szkic odpowiedzi do zgłoszenia', s: 'Dokończ albo zamknij czat', age: '1 dzień' },
+    { src: 'gmail',   area: 'dom',   p: 'warn', t: 'Rezerwacja warsztatów pizzy w Neapolu', s: 'Około 10 osób', age: '4 dni' },
+    { src: 'grok',    area: 'dom',   p: 'ok',   t: '2 nowe zlecenia w Kolejce X', s: 'Wyniki jutro rano', age: 'dziś' },
+    { src: 'notion',  area: 'dom',   p: 'ok',   t: 'Przegląd tygodniowy w niedzielę', s: 'Najwyżej 5 spraw do decyzji', age: 'za 6 dni' }
+  ];
+
+  const CHATS = [
+    { id: 'c1', src: 'claude', area: 'dom',   t: 'Kokpit: centrum dowodzenia', last: 'teraz',   st: 0 },
+    { id: 'c2', src: 'gptp',   area: 'dom',   t: 'Agents API: test z subagentami', last: '2 dni', st: 0 },
+    { id: 'c3', src: 'gptf',   area: 'praca', t: 'Service Triage: prompt', last: '5 dni',          st: 1 },
+    { id: 'c4', src: 'claude', area: 'praca', t: 'Warsztat 2: filmiki', last: '2 dni',             st: 1 },
+    { id: 'c5', src: 'grok',   area: 'dom',   t: 'Agent X i Kolejka X', last: '1 dzień',           st: 0 },
+    { id: 'c6', src: 'gptp',   area: 'dom',   t: 'Radar win: Lidl, Netto, Żabka', last: '9 dni',   st: 1 },
+    { id: 'c7', src: 'gptf',   area: 'praca', t: 'Wycena raportu produktywności', last: '3 dni',   st: 0 },
+    { id: 'c8', src: 'claude', area: 'dom',   t: 'Wytyczne AI: podział na podstrony', last: '3 dni', st: 2 }
+  ];
+  const CHAT_ST = [{ n: 'Otwarte', cls: 'acc' }, { n: 'Czeka na mnie', cls: 'warn' }, { n: 'Zamknięte', cls: 'muted' }];
+
+  const CAL = [
+    { at: '09:30', t: 'Stand-up zespołu', src: 'teams' },
+    { at: '11:00', t: 'Spotkanie wewnętrzne: Warsztat 2', src: 'teams', now: true },
+    { at: '13:30', t: 'Rozmowa z klientem o wycenie', src: 'outlook' },
+    { at: '17:00', t: 'Odbiór materiałów na schody', src: 'gmail' }
+  ];
+
+  const GROK = [
+    { t: 'Kokpit na maile, Teams i czaty AI', st: 'Do pobrania', cls: 'muted' },
+    { t: 'Rozszerzenia do historii czatów AI', st: 'Do pobrania', cls: 'muted' },
+    { t: 'Polska dyskusja o widoczności w AI', st: 'Do pobrania', cls: 'muted' },
+    { t: 'Treść postów, paczka 4 z 4', st: 'W toku', cls: 'acc' },
+    { t: 'Wspólna pamięć dla kilku AI', st: 'Gotowe', cls: 'ok' }
+  ];
+
+  const TYPES = {
+    kpi:       { name: 'Kafelek ze statusem', desc: 'Jedna liczba z jednego źródła i trend z 7 dni.', w: 2, h: 2, minW: 2, minH: 2 },
+    queue:     { name: 'Lista: czeka na Ciebie', desc: 'Sprawy ze wszystkich źródeł, od najpilniejszej.', w: 5, h: 7, minW: 3, minH: 4 },
+    chats:     { name: 'Lista: otwarte czaty AI', desc: 'Czaty z ChatGPT, Claude i Groka ze statusem.', w: 4, h: 7, minW: 3, minH: 4 },
+    shortcuts: { name: 'Skróty', desc: 'Przyciski, które otwierają aplikacje.', w: 3, h: 3, minW: 2, minH: 2 },
+    brief:     { name: 'Streszczenie dnia', desc: 'Kilka zdań od AI o tym, co dziś ważne.', w: 5, h: 4, minW: 3, minH: 3 },
+    calendar:  { name: 'Kalendarz na dziś', desc: 'Spotkania z Outlooka i Teams.', w: 3, h: 4, minW: 2, minH: 3 },
+    grok:      { name: 'Kolejka X', desc: 'Zlecenia dla Groka i ich stan.', w: 4, h: 4, minW: 3, minH: 3 },
+    note:      { name: 'Notatka', desc: 'Miejsce na szybki zapis.', w: 3, h: 4, minW: 2, minH: 2 }
+  };
+
+  const k = (id, key, x, y, w = 2, h = 2) => ({ id, type: 'kpi', cfg: { k: key }, x, y, w, h });
+  const DEFAULTS = {
+    all: [
+      k('a1', 'gmail', 0, 0), k('a2', 'outlook', 2, 0), k('a3', 'teams', 4, 0),
+      k('a4', 'ai', 6, 0), k('a5', 'overdue', 8, 0), k('a6', 'grokq', 10, 0),
+      { id: 'a7', type: 'queue', cfg: { area: 'all' }, x: 0, y: 2, w: 5, h: 7 },
+      { id: 'a8', type: 'chats', cfg: { area: 'all' }, x: 5, y: 2, w: 4, h: 7 },
+      { id: 'a9', type: 'shortcuts', x: 9, y: 2, w: 3, h: 3 },
+      { id: 'a10', type: 'calendar', x: 9, y: 5, w: 3, h: 4 },
+      { id: 'a11', type: 'brief', x: 0, y: 9, w: 5, h: 4 },
+      { id: 'a12', type: 'grok', x: 5, y: 9, w: 4, h: 4 },
+      { id: 'a13', type: 'note', x: 9, y: 9, w: 3, h: 4 }
+    ],
+    praca: [
+      k('p1', 'outlook', 0, 0, 3), k('p2', 'teams', 3, 0, 3), k('p3', 'overdue', 6, 0, 3), k('p4', 'ai', 9, 0, 3),
+      { id: 'p5', type: 'queue', cfg: { area: 'praca' }, x: 0, y: 2, w: 6, h: 6 },
+      { id: 'p6', type: 'chats', cfg: { area: 'praca' }, x: 6, y: 2, w: 6, h: 6 },
+      { id: 'p7', type: 'calendar', x: 0, y: 8, w: 4, h: 4 },
+      { id: 'p8', type: 'shortcuts', x: 4, y: 8, w: 4, h: 3 },
+      { id: 'p9', type: 'brief', x: 8, y: 8, w: 4, h: 4 }
+    ],
+    dom: [
+      k('d1', 'gmail', 0, 0, 4), k('d2', 'ai', 4, 0, 4), k('d3', 'grokq', 8, 0, 4),
+      { id: 'd4', type: 'queue', cfg: { area: 'dom' }, x: 0, y: 2, w: 6, h: 6 },
+      { id: 'd5', type: 'chats', cfg: { area: 'dom' }, x: 6, y: 2, w: 6, h: 6 },
+      { id: 'd6', type: 'grok', x: 0, y: 8, w: 4, h: 4 },
+      { id: 'd7', type: 'note', x: 4, y: 8, w: 4, h: 4 },
+      { id: 'd8', type: 'shortcuts', x: 8, y: 8, w: 4, h: 3 }
+    ]
+  };
+
+  // Pamięć tylko w tej przeglądarce. Strona działa też bez niej.
+  const store = {
+    get(key, def) { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch (e) { return def; } },
+    set(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) { /* brak pamięci */ } }
+  };
+  const clone = (o) => JSON.parse(JSON.stringify(o));
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+  let layouts = store.get('cd-layouts-v1', null);
+  if (!layouts || !layouts.all || !layouts.praca || !layouts.dom) layouts = clone(DEFAULTS);
+  let screen = store.get('cd-screen', 'all');
+  if (!layouts[screen]) screen = 'all';
+  const chatStatus = store.get('cd-chats', {});
+  let editing = false, drag = null, els = {};
+
+  const board = document.getElementById('board');
+  const ph = document.getElementById('ph');
+  const editBtn = document.getElementById('edit');
+  const addBtn = document.getElementById('add');
+  const resetBtn = document.getElementById('reset');
+  const menu = document.getElementById('menu');
+  const hintText = document.getElementById('hintText');
+
+  document.getElementById('today').textContent =
+    new Date().toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'long' });
+
+  const L = () => layouts[screen];
+  const save = () => { store.set('cd-layouts-v1', layouts); store.set('cd-screen', screen); };
+  const narrow = () => window.innerWidth < NARROW;
+  const srcChip = (key) => `<span class="src" style="--c:var(${SRC[key].c})">${SRC[key].n}</span>`;
+
+  // Układ siatki: wykrywanie kolizji, spychanie w dół i dociąganie do góry.
+  const collide = (a, b) => a.id !== b.id && a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+  function settle(list, activeId) {
+    const act = list.find((i) => i.id === activeId);
+    const rest = list.filter((i) => i !== act).sort((a, b) => a.y - b.y || a.x - b.x);
+    const placed = act ? [act] : [];
+    for (const it of rest) {
+      while (placed.some((p) => collide(it, p))) it.y++;
+      placed.push(it);
+    }
+    const order = [...list].sort((a, b) => a.y - b.y || a.x - b.x);
+    const done = [];
+    for (const it of order) {
+      while (it.y > 0 && !done.some((p) => collide({ ...it, y: it.y - 1 }, p))) it.y--;
+      done.push(it);
+    }
+    return list;
+  }
+
+  function spark(series) {
+    const max = Math.max(...series), min = Math.min(...series), span = max - min || 1;
+    const pts = series.map((v, i) => `${(i * 100 / (series.length - 1)).toFixed(1)},${(28 - (v - min) / span * 24).toFixed(1)}`).join(' ');
+    return `<svg class="spark" viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true">` +
+      `<polygon class="sp-a" points="0,30 ${pts} 100,30"/>` +
+      `<polyline class="sp-l" points="${pts}" vector-effect="non-scaling-stroke"/></svg>`;
+  }
+
+  // Treść każdego rodzaju okna.
+  function content(it) {
+    const area = (it.cfg && it.cfg.area) || 'all';
+    const inArea = (x) => area === 'all' || x.area === area;
+    switch (it.type) {
+      case 'kpi': {
+        const d = KPI[it.cfg.k];
+        const lbl = { ok: 'w normie', warn: 'uwaga', crit: 'pilne' }[d.state];
+        return {
+          title: d.label, cls: 'st-' + d.state,
+          meta: `<span class="pill ${d.state}">${lbl}</span>`,
+          body: `<div class="kpi-num"><b>${d.value}</b><span>${d.unit}</span></div><div class="kpi-sub">${d.sub}</div>${spark(d.series)}`
+        };
+      }
+      case 'queue': {
+        const items = QUEUE.filter(inArea);
+        return {
+          title: 'Czeka na Ciebie', meta: `${items.length} spraw`,
+          body: `<ol class="list">${items.map((q) => `<li><a class="row p-${q.p}" href="${SRC[q.src].url}" target="_blank" rel="noopener">` +
+            `<span class="row-t">${q.t}</span><span class="row-age">${q.age}</span>` +
+            `<span class="row-s">${srcChip(q.src)}<span>${q.s}</span></span></a></li>`).join('')}</ol>`
+        };
+      }
+      case 'chats': {
+        const items = CHATS.filter(inArea);
+        const open = items.filter((c) => (chatStatus[c.id] ?? c.st) !== 2).length;
+        return {
+          title: 'Otwarte czaty AI', meta: `${open} z ${items.length} otwartych`,
+          body: `<ul class="list">${items.map((c) => {
+            const st = CHAT_ST[chatStatus[c.id] ?? c.st];
+            return `<li><div class="row p-ok"><span class="row-t">${c.t}</span>` +
+              `<button class="pill ${st.cls} cycle" data-chat="${c.id}" title="Kliknij, żeby zmienić status">${st.n}</button>` +
+              `<span class="row-s">${srcChip(c.src)}<span>ostatnio: ${c.last}</span></span></div></li>`;
+          }).join('')}</ul>`
+        };
+      }
+      case 'shortcuts': {
+        const keys = ['gmail', 'outlook', 'teams', 'gptp', 'gptf', 'claude', 'grok', 'notion', 'x'];
+        return {
+          title: 'Skróty', meta: '',
+          body: `<div class="sc">${keys.map((key) => `<a href="${SRC[key].url}" target="_blank" rel="noopener" style="--c:var(${SRC[key].c})"><i>${SRC[key].ab}</i>${SRC[key].n}</a>`).join('')}</div>`
+        };
+      }
+      case 'brief':
+        return {
+          title: 'Streszczenie dnia', meta: '7:00',
+          body: `<div class="brief"><p><strong>2 sprawy są dziś pilne.</strong> Klient czeka 3 dni na termin wyceny. Wykonawca schodów czeka na potwierdzenie startu.</p>` +
+            `<p>W Teams Andrzej pyta o filmiki z warsztatu. Odpowiedź zajmie 2 minuty.</p>` +
+            `<p>Masz 23 otwarte czaty AI. 6 z nich nie ruszałeś od tygodnia. Proponuję zamknąć 4.</p>` +
+            `<p>Grok ma 7 zleceń w Kolejce X. Wyniki będą jutro rano.</p>` +
+            `<p class="foot">Przygotował Claude dziś o 7:00. To przykładowy tekst.</p></div>`
+        };
+      case 'calendar':
+        return {
+          title: 'Kalendarz na dziś', meta: `${CAL.length} spotkania`,
+          body: `<ul class="list cal">${CAL.map((c) => `<li class="${c.now ? 'now' : ''}"><time>${c.at}</time><span class="row-t">${c.t}</span>${srcChip(c.src)}</li>`).join('')}</ul>`
+        };
+      case 'grok':
+        return {
+          title: 'Kolejka X', meta: 'Grok · 7:30',
+          body: `<ul class="list">${GROK.map((g) => `<li><div class="row p-ok"><span class="row-t">${g.t}</span><span class="pill ${g.cls}">${g.st}</span></div></li>`).join('')}</ul>`
+        };
+      case 'note':
+        return {
+          title: 'Notatka', meta: '',
+          body: `<textarea id="note-${it.id}" aria-label="Notatka" placeholder="Zapisz tu coś na szybko…"></textarea>`
+        };
+    }
+    return { title: '?', meta: '', body: '' };
+  }
+
+  const ICON_GRIP = '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><g fill="currentColor"><circle cx="4" cy="3" r="1.3"/><circle cx="10" cy="3" r="1.3"/><circle cx="4" cy="7" r="1.3"/><circle cx="10" cy="7" r="1.3"/><circle cx="4" cy="11" r="1.3"/><circle cx="10" cy="11" r="1.3"/></g></svg>';
+  const ICON_X = '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" stroke-width="1.6" fill="none"/></svg>';
+
+  function build(it) {
+    const c = content(it);
+    const el = document.createElement('section');
+    el.className = `w t-${it.type} ${c.cls || ''}`;
+    el.dataset.id = it.id;
+    el.setAttribute('aria-label', c.title);
+    el.innerHTML =
+      `<header class="w-head"><button class="grip" aria-label="Przesuń okno ${c.title}. Strzałki przesuwają, Shift ze strzałkami zmienia rozmiar.">${ICON_GRIP}</button>` +
+      `<h2 class="w-title">${c.title}</h2><span class="w-meta">${c.meta}</span>` +
+      `<button class="w-x" aria-label="Usuń okno ${c.title}">${ICON_X}</button></header>` +
+      `<div class="w-body">${c.body}</div><div class="rz" aria-hidden="true"></div>`;
+
+    el.querySelector('.w-head').addEventListener('pointerdown', (e) => {
+      if (e.target.closest('.w-x')) return;
+      startDrag(e, it.id, 'move');
+    });
+    el.querySelector('.rz').addEventListener('pointerdown', (e) => startDrag(e, it.id, 'size'));
+    el.querySelector('.w-x').addEventListener('click', () => removeWidget(it.id));
+    el.querySelector('.grip').addEventListener('keydown', (e) => keyMove(e, it.id));
+
+    const ta = el.querySelector('textarea');
+    if (ta) {
+      ta.value = store.get('cd-note-' + it.id, '');
+      ta.addEventListener('input', () => store.set('cd-note-' + it.id, ta.value));
+    }
+    return el;
+  }
+
+  function refresh(id) {
+    const it = L().find((i) => i.id === id);
+    const old = els[id];
+    const el = build(it);
+    board.replaceChild(el, old);
+    els[id] = el;
+    layoutAll();
+  }
+
+  function geom() {
+    const W = board.clientWidth;
+    return { cw: (W - GAP * (COLS - 1)) / COLS };
+  }
+  function placeEl(el, it, g) {
+    g = g || geom();
+    el.style.left = it.x * (g.cw + GAP) + 'px';
+    el.style.top = it.y * (ROWH + GAP) + 'px';
+    el.style.width = it.w * g.cw + (it.w - 1) * GAP + 'px';
+    el.style.height = it.h * ROWH + (it.h - 1) * GAP + 'px';
+  }
+  function setBoardHeight() {
+    const rows = Math.max(0, ...L().map((i) => i.y + i.h)) + (editing ? 2 : 0);
+    board.style.height = Math.max(200, rows * (ROWH + GAP) - GAP) + 'px';
+  }
+
+  function layoutAll() {
+    if (narrow()) {
+      board.classList.add('stack');
+      const sorted = [...L()].sort((a, b) => a.y - b.y || a.x - b.x);
+      sorted.forEach((it, i) => {
+        const el = els[it.id];
+        el.style.order = i;
+        el.style.height = it.type === 'kpi' ? '120px' : Math.min(it.h, 7) * 46 + 'px';
+      });
+      return;
+    }
+    board.classList.remove('stack');
+    const g = geom();
+    board.style.setProperty('--cw', g.cw + 'px');
+    for (const it of L()) {
+      const el = els[it.id];
+      if (!el) continue;
+      el.style.order = '';
+      if (!drag || drag.id !== it.id) placeEl(el, it, g);
+    }
+    setBoardHeight();
+  }
+
+  function renderBoard() {
+    for (const el of Object.values(els)) el.remove();
+    els = {};
+    for (const it of L()) {
+      const el = build(it);
+      board.appendChild(el);
+      els[it.id] = el;
+    }
+    layoutAll();
+    document.querySelectorAll('.tab').forEach((t) => t.setAttribute('aria-selected', String(t.dataset.screen === screen)));
+  }
+
+  // Przeciąganie i zmiana rozmiaru.
+  function startDrag(e, id, mode) {
+    if (!editing || narrow() || e.button !== 0) return;
+    e.preventDefault();
+    const it = L().find((i) => i.id === id);
+    drag = { id, mode, sx: e.clientX, sy: e.clientY, start: { ...it }, base: clone(L()) };
+    els[id].classList.add('dragging');
+    document.body.classList.add('is-dragging');
+    ph.hidden = false;
+    placeEl(ph, it);
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
+  }
+  function onMove(e) {
+    if (!drag) return;
+    const d = drag, g = geom(), ux = g.cw + GAP, uy = ROWH + GAP;
+    const dx = e.clientX - d.sx, dy = e.clientY - d.sy;
+    const t = TYPES[d.start.type];
+    const next = clone(d.base);
+    const a = next.find((i) => i.id === d.id);
+    const el = els[d.id];
+    if (d.mode === 'move') {
+      a.x = clamp(Math.round(d.start.x + dx / ux), 0, COLS - a.w);
+      a.y = Math.max(0, Math.round(d.start.y + dy / uy));
+      el.style.left = d.start.x * ux + dx + 'px';
+      el.style.top = d.start.y * uy + dy + 'px';
+    } else {
+      a.w = clamp(Math.round(d.start.w + dx / ux), t.minW, COLS - a.x);
+      a.h = Math.max(t.minH, Math.round(d.start.h + dy / uy));
+      el.style.width = Math.max(t.minW * g.cw, d.start.w * g.cw + (d.start.w - 1) * GAP + dx) + 'px';
+      el.style.height = Math.max(t.minH * ROWH, d.start.h * ROWH + (d.start.h - 1) * GAP + dy) + 'px';
+    }
+    settle(next, d.id);
+    layouts[screen] = next;
+    for (const it of next) if (it.id !== d.id) placeEl(els[it.id], it, g);
+    placeEl(ph, a, g);
+    setBoardHeight();
+  }
+  function onUp() {
+    if (!drag) return;
+    window.removeEventListener('pointermove', onMove);
+    window.removeEventListener('pointerup', onUp);
+    window.removeEventListener('pointercancel', onUp);
+    els[drag.id].classList.remove('dragging');
+    document.body.classList.remove('is-dragging');
+    ph.hidden = true;
+    drag = null;
+    layoutAll();
+    save();
+  }
+
+  function keyMove(e, id) {
+    const dirs = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+    if (!editing || !dirs[e.key]) return;
+    e.preventDefault();
+    const [dx, dy] = dirs[e.key];
+    const it = L().find((i) => i.id === id);
+    const t = TYPES[it.type];
+    if (e.shiftKey) {
+      it.w = clamp(it.w + dx, t.minW, COLS - it.x);
+      it.h = Math.max(t.minH, it.h + dy);
+    } else {
+      it.x = clamp(it.x + dx, 0, COLS - it.w);
+      it.y = Math.max(0, it.y + dy);
+    }
+    settle(L(), id);
+    layoutAll();
+    save();
+  }
+
+  function removeWidget(id) {
+    layouts[screen] = L().filter((i) => i.id !== id);
+    if (els[id]) { els[id].remove(); delete els[id]; }
+    settle(L(), null);
+    layoutAll();
+    save();
+  }
+
+  function addWidget(type, cfg) {
+    const t = TYPES[type];
+    const it = {
+      id: 'w' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      type, cfg: cfg || (type === 'queue' || type === 'chats' ? { area: screen } : undefined),
+      x: 0, y: Math.max(0, ...L().map((i) => i.y + i.h)), w: t.w, h: t.h
+    };
+    L().push(it);
+    settle(L(), it.id);
+    const el = build(it);
+    board.appendChild(el);
+    els[it.id] = el;
+    setEditing(true);
+    layoutAll();
+    save();
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function setEditing(on) {
+    editing = on && !narrow();
+    document.getElementById('app').classList.toggle('editing', editing);
+    editBtn.setAttribute('aria-pressed', String(editing));
+    hintText.textContent = narrow()
+      ? 'Na telefonie okna są ułożone jedno pod drugim. Układanie działa na szerszym ekranie.'
+      : editing
+        ? 'Przeciągnij okno za nagłówek. Róg w prawym dolnym rogu zmienia rozmiar. Krzyżyk usuwa okno.'
+        : 'Kliknij „Układaj okna”. Potem przeciągnij okno za nagłówek, a róg w prawym dolnym rogu zmienia rozmiar.';
+    editBtn.disabled = narrow();
+    layoutAll();
+  }
+
+  // Menu „Dodaj okno”.
+  function buildMenu() {
+    const kpis = Object.entries(KPI).map(([key, d]) =>
+      `<button data-type="kpi" data-k="${key}"><b>Kafelek: ${d.label}</b><span>${d.value} ${d.unit}</span></button>`).join('');
+    const rest = Object.entries(TYPES).filter(([key]) => key !== 'kpi').map(([key, t]) =>
+      `<button data-type="${key}"><b>${t.name}</b><span>${t.desc}</span></button>`).join('');
+    menu.innerHTML = `<h3>Kafelki ze statusem</h3>${kpis}<h3>Okna</h3>${rest}`;
+  }
+  function toggleMenu(open) {
+    menu.hidden = !open;
+    addBtn.setAttribute('aria-expanded', String(open));
+    if (open) menu.querySelector('button').focus();
+  }
+  addBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleMenu(menu.hidden); });
+  menu.addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-type]');
+    if (!b) return;
+    toggleMenu(false);
+    addWidget(b.dataset.type, b.dataset.k ? { k: b.dataset.k } : undefined);
+  });
+  document.addEventListener('click', (e) => { if (!menu.hidden && !e.target.closest('.menu')) toggleMenu(false); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !menu.hidden) { toggleMenu(false); addBtn.focus(); } });
+
+  editBtn.addEventListener('click', () => setEditing(!editing));
+
+  let resetArmed = null;
+  resetBtn.addEventListener('click', () => {
+    if (!resetArmed) {
+      resetBtn.textContent = 'Na pewno? Kliknij jeszcze raz';
+      resetBtn.classList.add('danger');
+      resetArmed = setTimeout(() => { resetArmed = null; resetBtn.textContent = 'Przywróć układ'; resetBtn.classList.remove('danger'); }, 3000);
+      return;
+    }
+    clearTimeout(resetArmed); resetArmed = null;
+    resetBtn.textContent = 'Przywróć układ'; resetBtn.classList.remove('danger');
+    layouts[screen] = clone(DEFAULTS[screen]);
+    save();
+    renderBoard();
+  });
+
+  document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => {
+    screen = t.dataset.screen;
+    save();
+    renderBoard();
+  }));
+
+  board.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-chat]');
+    if (!b) return;
+    const c = CHATS.find((x) => x.id === b.dataset.chat);
+    chatStatus[c.id] = ((chatStatus[c.id] ?? c.st) + 1) % CHAT_ST.length;
+    store.set('cd-chats', chatStatus);
+    for (const it of L()) if (it.type === 'chats') refresh(it.id);
+  });
+
+  let wasNarrow = narrow();
+  new ResizeObserver(() => {
+    if (drag) return;
+    if (narrow() !== wasNarrow) { wasNarrow = narrow(); setEditing(editing); }
+    layoutAll();
+  }).observe(board);
+
+  buildMenu();
+  renderBoard();
+  setEditing(false);
+})();
+</script>
