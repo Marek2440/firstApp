@@ -1,0 +1,83 @@
+name: AI się odzywa (telefon / Telegram)
+
+on:
+  schedule:
+    # GitHub liczy cron w UTC i nie zna czasu letniego, więc startujemy o 6:05 i 7:05 UTC,
+    # a krok "Sprawdź godzinę" przepuszcza tylko ten start, gdy w Warszawie jest 8:xx.
+    # Dni: poniedziałek–piątek.
+    - cron: "5 6,7 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: "Jak AI ma się odezwać"
+        type: choice
+        options: [domyślny, telefon, telegram]
+        default: domyślny
+      topic:
+        description: "Temat rozmowy (opcjonalnie)"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ai-kontakt
+  cancel-in-progress: false
+
+env:
+  # Godzina w Polsce dla harmonogramu. Zmieniając ją, zmień też cron powyżej
+  # (godzina w Polsce minus 1 i minus 2 h).
+  TARGET_HOUR: "8"
+
+jobs:
+  contact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sprawdź godzinę i wybierz kanał
+        id: plan
+        env:
+          EVENT: ${{ github.event_name }}
+          INPUT_CHANNEL: ${{ inputs.channel }}
+          DEFAULT_CHANNEL: ${{ vars.CHANNEL }}
+        run: |
+          if [[ "$EVENT" == "schedule" ]]; then
+            hour=$(TZ=Europe/Warsaw date +%-H)
+            if [[ "$hour" != "$TARGET_HOUR" ]]; then
+              echo "W Warszawie jest ${hour}:xx, a AI ma się odezwać o ${TARGET_HOUR}:xx. Pomijam."
+              echo "channel=pomiń" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+          channel="$INPUT_CHANNEL"
+          if [[ -z "$channel" || "$channel" == "domyślny" ]]; then
+            channel="${DEFAULT_CHANNEL:-telefon}"
+          fi
+          case "$channel" in
+            telefon|telegram) ;;
+            *) echo "Nieznany kanał '$channel'. Zmienna CHANNEL może mieć wartość: telefon, telegram." >&2; exit 1 ;;
+          esac
+          echo "Kanał: $channel"
+          echo "channel=$channel" >> "$GITHUB_OUTPUT"
+
+      - name: Zadzwoń przez Vapi
+        if: steps.plan.outputs.channel == 'telefon'
+        env:
+          VAPI_API_KEY: ${{ secrets.VAPI_API_KEY }}
+          VAPI_ASSISTANT_ID: ${{ secrets.VAPI_ASSISTANT_ID }}
+          VAPI_PHONE_NUMBER_ID: ${{ secrets.VAPI_PHONE_NUMBER_ID }}
+          MY_PHONE_NUMBER: ${{ secrets.MY_PHONE_NUMBER }}
+          TOPIC: ${{ inputs.topic }}
+          MAX_DURATION_SECONDS: ${{ vars.MAX_DURATION_SECONDS || '180' }}
+        run: bash scripts/vapi-call.sh
+
+      - name: Napisz na Telegramie
+        if: steps.plan.outputs.channel == 'telegram'
+        env:
+          WORKER_URL: ${{ vars.WORKER_URL }}
+          AI_TRIGGER_SECRET: ${{ secrets.AI_TRIGGER_SECRET }}
+          TOPIC: ${{ inputs.topic }}
+        run: bash scripts/telegram-start.sh
