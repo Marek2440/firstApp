@@ -358,29 +358,18 @@ a.chip { text-decoration: none; }
     primary: { label: 'Główne',         input: { query: 'in:inbox category:primary newer_than:14d', pageSize: 25 } },
     all:     { label: 'Wszystkie',      input: { query: 'in:inbox newer_than:7d', pageSize: 25 } }
   };
-  const TASKS_DS = 'collection://1fde214f-3164-8002-8e37-000b88ac147a';    // Tasks Tracker
-  const QUEUEX_DS = 'collection://16808ac3-40d4-4e63-af26-d039a24dbdfa';   // Kolejka X
+  // Notion czytamy przez zapisane widoki baz („Kokpit: …”). Ten tryb nie zużywa
+  // limitu zapytań SQL i rows w Notion. Filtry i sortowanie siedzą w widokach.
+  const viewQuery = (view) => ({ data: { mode: 'view', view_url: view, page_size: 100 } });
   const LQ = {
-    overdue: { server: NOTION, tool: NQ_TOOL, every: 600000, input: { data: {
-      mode: 'rows', data_source_url: TASKS_DS, limit: 100,
-      filter: { type: 'group', operator: 'and', filters: [
-        { type: 'property', property: 'Status', propertyType: 'status', operator: 'status_is_not', value: { type: 'is_option', value: 'Done' } },
-        { type: 'property', property: 'Due date', propertyType: 'date', operator: 'date_is_before', value: { type: 'relative', value: 'today' } }
-      ] },
-      sort: [{ property: 'Due date', direction: 'ascending' }]
-    } } },
-    kolejka: { server: NOTION, tool: NQ_TOOL, every: 600000, input: { data: { mode: 'rows', data_source_url: QUEUEX_DS, limit: 50 } } }
+    overdue: { server: NOTION, tool: NQ_TOOL, every: 900000, input: viewQuery('view://3ffe214f-3164-81e5-bc8d-000c5fc44b5c') },  // Tasks Tracker: Kokpit: po terminie
+    kolejka: { server: NOTION, tool: NQ_TOOL, every: 900000, input: viewQuery('view://3ffe214f-3164-8175-bcde-000ca043940e') }   // Kolejka X: Kokpit: kolejka
   };
   for (const [key, q] of Object.entries(GQ)) LQ[key] = { server: GMAIL, tool: 'search_threads', every: 120000, input: q.input };
 
   // Tablica otwartych spraw: baza „Otwarte sprawy” w Notion. Strona czyta i zapisuje.
   const LOOPS_DS = 'feae35e1-502d-4d89-a0ff-f05be506d36f';
-  LQ.loops = { server: NOTION, tool: NQ_TOOL, every: 300000, input: { data: {
-    mode: 'rows', data_source_url: 'collection://' + LOOPS_DS, limit: 100,
-    filter: { type: 'group', operator: 'and', filters: [
-      { type: 'property', property: 'Status', propertyType: 'select', operator: 'enum_is_not', value: { type: 'exact', value: 'Zamknięte' } }
-    ] }
-  } } };
+  LQ.loops = { server: NOTION, tool: NQ_TOOL, every: 600000, input: viewQuery('view://3ffe214f-3164-813d-bad3-000c2ae3be1a') };  // Otwarte sprawy: Kokpit: otwarte
   const LOOP_ST = ['Otwarte', 'Czeka na mnie', 'Czeka na kogoś', 'Zamknięte'];
   const LOOP_CLS = { 'Otwarte': 'acc', 'Czeka na mnie': 'warn', 'Czeka na kogoś': 'muted', 'Zamknięte': 'ok' };
   const LOOP_ORDER = { 'Czeka na mnie': 0, 'Otwarte': 1, 'Czeka na kogoś': 2, 'Zamknięte': 3 };
