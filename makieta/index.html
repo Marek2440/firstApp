@@ -170,6 +170,9 @@ a.row:hover .row-t { color: var(--accent); }
 .chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 3px 10px; font-size: 12px; cursor: pointer; color: var(--muted); }
 .chip[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
 .mail .row-t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mail a.row-t { display: block; }
+.mail .row-s { margin-top: 2px; }
+.mail .chip { padding: 1px 8px; font-size: 11.5px; }
 .mail .unread .row-t { font-weight: 600; }
 .mail .unread .row-t::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-right: 7px; vertical-align: 1px; }
 .mail .snip { grid-column: 1 / -1; font-size: 12.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -401,6 +404,38 @@ a.chip { text-decoration: none; }
     })).filter((l) => l.status !== 'Zamknięte')
       .sort((a, b) => (LOOP_ORDER[a.status] ?? 9) - (LOOP_ORDER[b.status] ?? 9) || String(b.changed).localeCompare(String(a.changed)));
   }
+  // Mail dodany do spraw: pamiętamy wątki, żeby nie dodać ich dwa razy.
+  const addedMail = new Set(store.get('cd-mail-added', []));
+  const addingMail = new Set();
+  const threadKey = (u) => { const m = String(u || '').match(/thread-f:(\d+)/); return m ? m[1] : String(u || ''); };
+  function mailInLoops(t) {
+    if (addedMail.has(t.id)) return true;
+    const key = threadKey(t.url);
+    return (loops() || []).some((l) => l.link && threadKey(l.link) === key);
+  }
+  async function addMailToLoops(id) {
+    if (!mcp || addingMail.has(id)) return;
+    let t = null;
+    for (const k of Object.keys(GQ)) { t = (threadsOf(k) || []).find((x) => x.id === id); if (t) break; }
+    if (!t) return;
+    addingMail.add(id);
+    refreshType('gmail');
+    const props = { 'Sprawa': t.subject.slice(0, 200), 'Link': t.url, 'Źródło': 'Gmail', 'Status': 'Czeka na mnie', 'Obszar': 'Dom', 'Dodał': 'Marek', 'Następny krok': ('Odpowiedzieć: ' + t.sender).slice(0, 300) };
+    let msg = '', bad = false;
+    try {
+      await mcp.callTool(NOTION, 'notion-create-pages', { parent: { type: 'data_source_id', data_source_id: LOOPS_DS }, pages: [{ properties: props }], allow_async: false }, { cache: false });
+      addedMail.add(id);
+      store.set('cd-mail-added', [...addedMail].slice(-200));
+      msg = 'Dodano do spraw: ' + t.subject + '.';
+    } catch (err) {
+      msg = writeErr(err); bad = true;
+    }
+    addingMail.delete(id);
+    for (const it of L()) if (it.type === 'loops') Object.assign(loopUi[it.id] || (loopUi[it.id] = { open: false, busy: false }), { msg, bad });
+    reloadLoops();
+    refreshType('gmail');
+    refreshType('loops');
+  }
   const loopChip = (src) => LOOP_SRC[src] ? srcChip(LOOP_SRC[src]) : `<span class="src">${esc(src)}</span>`;
 
   const rowsOf = (key) => { const d = live[key] && live[key].data; return d && Array.isArray(d.results) ? d.results : (d ? [] : null); };
@@ -451,6 +486,7 @@ a.chip { text-decoration: none; }
     const labels = new Set(msgs.flatMap((m) => m.labelIds || []));
     const cat = [...labels].find((l) => l.startsWith('CATEGORY_'));
     return {
+      id: String(th.id || ''),
       subject: first.subject || '(bez tematu)', sender: senderName(last.sender), date: last.date,
       snippet: last.snippet || '', url: safeUrl(th.viewUrl || last.viewUrl),
       unread: labels.has('UNREAD'), important: labels.has('IMPORTANT'),
@@ -716,9 +752,12 @@ a.chip { text-decoration: none; }
         let list;
         if (th) {
           list = th.length
-            ? `<ul class="list mail">${th.slice(0, 25).map((t) => `<li class="${t.unread ? 'unread' : ''}"><a class="row ${t.important ? 'p-warn' : 'p-ok'}" href="${t.url}" target="_blank" rel="noopener">` +
-              `<span class="row-t">${esc(t.subject)}</span><span class="row-age">${esc(ago(t.date))}</span>` +
-              `<span class="snip">${esc(t.sender)} · ${esc(t.snippet)}</span></a></li>`).join('')}</ul>`
+            ? `<ul class="list mail">${th.slice(0, 25).map((t) => `<li class="${t.unread ? 'unread' : ''}"><div class="row ${t.important ? 'p-warn' : 'p-ok'}">` +
+              `<a class="row-t" href="${t.url}" target="_blank" rel="noopener">${esc(t.subject)}</a><span class="row-age">${esc(ago(t.date))}</span>` +
+              `<span class="snip">${esc(t.sender)} · ${esc(t.snippet)}</span>` +
+              `<span class="row-s">${mailInLoops(t) ? '<span class="pill ok">w sprawach</span>'
+                : `<button class="chip" data-tomatter="${esc(t.id)}"${mcpState === 'ready' && !addingMail.has(t.id) ? '' : ' disabled'}>${addingMail.has(t.id) ? 'Dodaję…' : '+ do spraw'}</button>`}</span>` +
+              `</div></li>`).join('')}</ul>`
             : `<p class="empty">Nic tu nie ma. Skrzynka jest czysta.</p>`;
         } else if (mcpState === 'ready' && !(live[key] && live[key].err)) {
           list = `<p class="empty">Wczytuję skrzynkę…</p>`;
@@ -1279,6 +1318,8 @@ a.chip { text-decoration: none; }
   });
 
   board.addEventListener('click', async (e) => {
+    const tm = e.target.closest('[data-tomatter]');
+    if (tm) { tm.disabled = true; addMailToLoops(tm.dataset.tomatter); return; }
     const bb = e.target.closest('[data-brief]');
     if (bb) {
       if (bb.dataset.brief === 'stop') { if (briefUi.ctl) briefUi.ctl.abort(); }
