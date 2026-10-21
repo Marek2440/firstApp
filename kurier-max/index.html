@@ -699,13 +699,14 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
 .tape-roll { width: 64px; height: 64px; border-radius: 50%; background: var(--tape); border: 4px solid var(--ink); box-shadow: inset 0 0 0 14px var(--tape), inset 0 0 0 18px var(--box-deep); }
 .printer { position: relative; width: 84px; height: 56px; border-radius: 10px; background: var(--device); border: 4px solid var(--ink); }
 .printer::after { content: ""; position: absolute; left: 14px; right: 14px; top: 12px; height: 6px; border-radius: 3px; background: var(--ink); }
-.printer-wrap { position: relative; display: flex; flex-direction: column; align-items: center; }
+.printer-wrap { position: relative; display: flex; align-items: center; gap: 14px; }
 .print-label {
-  position: absolute; bottom: calc(100% + 8px); left: 50%; width: 110px; height: 72px; padding: 0;
+  order: 2; flex: none; width: 110px; height: 72px; padding: 0;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
   background: var(--paper); border: 3px solid var(--ink); border-radius: 6px; box-shadow: 0 4px 0 var(--ink); cursor: pointer;
-  transform: translateX(-50%); font-family: var(--f-emoji); font-size: 30px; line-height: 1;
+  font-family: var(--f-emoji); font-size: 30px; line-height: 1;
 }
+.print-label[hidden] { display: flex !important; visibility: hidden; }
 .print-label.out { animation: printout .6s ease-out; }
 .print-label .pl-bar { width: 100%; height: 8px; margin-top: -10px; }
 .print-label .pl-no { font-family: var(--f-lcd); font-size: 15px; }
@@ -827,7 +828,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
 .track li.order span, .track li.wait span { opacity: .45; filter: grayscale(1); }
 
 @keyframes away { to { transform: translateX(120vw) rotate(8deg); } }
-@keyframes printout { from { transform: translate(-50%, 60px) scaleY(.2); opacity: 0; } to { transform: translateX(-50%); opacity: 1; } }
+@keyframes printout { from { transform: translateX(-70px) scaleX(.2); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes rainfall { to { background-position: 0 60px, 23px 120px; } }
 @keyframes wipe { from { transform: rotate(-72deg); } to { transform: rotate(72deg); } }
 @keyframes blinkbg { 50% { background: var(--sun); } }
