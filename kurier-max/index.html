@@ -54,6 +54,8 @@
   --gold-hi: #FFE27A;
   --gold-deep: #B57F00;
   --shade: rgba(29, 35, 64, .10);
+  --ok-soft: #DDF3E5;
+  --warn-soft: #FFF0C7;
 
   --f-display: "Lilita One", "Arial Rounded MT Bold", "Trebuchet MS", sans-serif;
   --f-body: "Nunito", "Segoe UI", system-ui, sans-serif;
@@ -194,7 +196,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
 .lede { margin: 8px 0 0; max-width: 30ch; font-size: clamp(18px, 1.4vw + 12px, 26px); font-weight: 800; }
 .start-street { position: relative; display: flex; flex-direction: column; align-items: center; }
 .van-side {
-  position: relative; z-index: 2; width: min(400px, 80vw, 46vh);
+  position: relative; z-index: 2; width: min(380px, 74vw, 40vh);
   margin-bottom: -16px; padding: 0; border: 0; background: none; cursor: pointer;
   animation: drivein 1.7s cubic-bezier(.2, .8, .3, 1) both;
 }
@@ -205,7 +207,16 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 5px; margin-top: -2.5px;
   background: repeating-linear-gradient(90deg, var(--paper) 0 30px, transparent 30px 60px);
 }
-.start-grass { flex: 1 1 auto; display: grid; place-items: center; padding-block: 20px; background: var(--grass); }
+.start-grass { flex: 1 1 auto; display: grid; place-items: center; padding-block: 18px; background: var(--grass); }
+.start-actions { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.btn-ghost {
+  display: inline-flex; align-items: center; gap: 8px; padding: 9px 18px 10px;
+  border-radius: 999px; border: 3px solid var(--ink); background: var(--paper); color: var(--ink);
+  box-shadow: 0 4px 0 var(--ink); font-weight: 900; font-size: 17px; cursor: pointer;
+}
+.btn-ghost:active { transform: translateY(4px); box-shadow: none; }
+.btn-ghost svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.voice-chip { margin: 0; padding: 3px 10px 2px; border-radius: 6px; background: var(--ink); color: var(--lcd); font-family: var(--f-lcd); font-size: 18px; line-height: 1.1; text-align: center; }
 
 .vs-body { fill: var(--van); stroke: var(--ink); stroke-width: 4; stroke-linejoin: round; }
 .vs-glass { fill: var(--glass); stroke: var(--ink); stroke-width: 3; stroke-linejoin: round; }
@@ -562,6 +573,57 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
 .log-st { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font-weight: 900; font-size: 13px; color: var(--ok); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .log-st span { font-family: var(--f-emoji); font-size: 24px; line-height: 1; }
 
+/* ---------- studio nagrań ---------- */
+#s-studio { overflow-y: auto; background: var(--sky); }
+.studio { max-width: 660px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; padding-block: 18px 30px; }
+.studio h2 {
+  margin: 0; font-family: var(--f-display); font-weight: 400; font-size: clamp(32px, 3vw + 20px, 46px); line-height: 1;
+  color: var(--paper);
+  text-shadow: 3px 0 0 var(--ink), -3px 0 0 var(--ink), 0 3px 0 var(--ink), 0 -3px 0 var(--ink), 0 6px 0 var(--ink);
+}
+.studio-lede { margin: 0; max-width: 60ch; font-size: 17px; line-height: 1.4; }
+.studio-steps {
+  margin: 0; padding: 14px 16px 14px 38px; display: grid; gap: 6px;
+  background: var(--paper); border: 3px solid var(--ink); border-radius: 14px;
+  font-size: 16px; line-height: 1.35;
+}
+.studio-steps li::marker { font-weight: 900; }
+.cta-file { position: relative; align-self: center; display: inline-flex; align-items: center; }
+.cta-file:focus-within { outline: 4px solid var(--plate); outline-offset: 3px; }
+.studio-status {
+  margin: 0; padding: 10px 14px; border-radius: 12px;
+  background: var(--paper); border: 3px solid var(--ink);
+  font-size: 16px; font-weight: 800; line-height: 1.35;
+}
+.studio-status:empty { display: none; }
+.studio-status.ok { background: var(--ok-soft); }
+.studio-status.warn { background: var(--warn-soft); }
+.studio-status.busy { animation: pulse 1.2s ease-in-out infinite; }
+.lines { list-style: none; margin: 0; padding: 0; overflow: hidden; background: var(--paper); border: 3px solid var(--ink); border-radius: 14px; }
+.ln { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; padding: 10px 12px; }
+.ln + .ln { border-top: 2px dashed var(--line); }
+.ln-num {
+  width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
+  border: 2px solid var(--ink); font-weight: 900; font-size: 14px; font-variant-numeric: tabular-nums;
+}
+.ln.has .ln-num { background: var(--ok); color: var(--paper); }
+.ln-body { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.ln-text { font-size: 16px; font-weight: 800; line-height: 1.3; }
+.ln-chip { padding: 2px 6px 1px; border-radius: 4px; background: var(--line); color: var(--muted); font-family: var(--f-lcd); font-size: 16px; line-height: 1; }
+.ln.has .ln-chip { background: var(--ok); color: var(--paper); }
+.ln-act { display: flex; gap: 6px; }
+.mini {
+  position: relative; width: 40px; height: 40px; padding: 0; display: grid; place-items: center;
+  border-radius: 10px; border: 3px solid var(--ink); background: var(--paper); color: var(--ink);
+  box-shadow: 0 3px 0 var(--ink); cursor: pointer;
+}
+.mini:active { transform: translateY(3px); box-shadow: none; }
+.mini:focus-within { outline: 4px solid var(--plate); outline-offset: 2px; }
+.mini svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.mini .solid, .btn-ghost .solid { fill: currentColor; stroke: none; }
+.studio-foot { display: flex; justify-content: center; padding-top: 4px; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
 /* ---------- szerokie ekrany ---------- */
 @media (min-aspect-ratio: 5/4) {
   .depot-grid { flex-direction: row; justify-content: center; align-items: flex-end; }
@@ -571,7 +633,11 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   .facade { border-bottom: 0; border-right: 4px solid var(--ink); }
   .tray::before { display: none; }
 }
-@media (max-width: 480px) { .brand span { display: none; } }
+@media (max-width: 480px) {
+  .brand span { display: none; }
+  .ln { grid-template-columns: auto 1fr; }
+  .ln-act { grid-column: 2; }
+}
 
 @keyframes fadein { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 @keyframes slidein { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: none; } }
@@ -660,7 +726,14 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
         <div class="road" aria-hidden="true"></div>
       </div>
       <div class="start-grass gutter">
-        <button class="cta pulse" id="btn-start" type="button">Zaczynamy!</button>
+        <div class="start-actions">
+          <button class="cta pulse" id="btn-start" type="button">Zaczynamy!</button>
+          <button class="btn-ghost" id="btn-studio" type="button">
+            <svg viewBox="0 0 28 28" aria-hidden="true"><rect x="10" y="3.5" width="8" height="13" rx="4"/><path d="M6.5 13a7.5 7.5 0 0 0 15 0M14 20.5v4M10 24.5h8"/></svg>
+            Nagraj swój głos
+          </button>
+          <p class="voice-chip" id="voice-chip">Lektor: głos komputera</p>
+        </div>
       </div>
     </section>
 
@@ -783,6 +856,24 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
           <ul class="log" id="log"></ul>
         </div>
         <button class="cta" id="btn-again" type="button">Jeszcze jedna trasa</button>
+      </div>
+    </section>
+
+    <!-- STUDIO NAGRAŃ -->
+    <section class="screen gutter" id="s-studio" hidden>
+      <div class="studio">
+        <h2>Twój głos w grze</h2>
+        <p class="studio-lede">Max usłyszy Ciebie zamiast głosu komputera. Zwierzaki dalej mówią swoimi głosami.</p>
+        <ol class="studio-steps">
+          <li>Włącz w telefonie Dyktafon albo nagrywanie filmu.</li>
+          <li>Przeczytaj na głos zdania z listy poniżej, po kolei. Po każdym zrób 2 sekundy ciszy.</li>
+          <li>Wgraj nagranie tutaj. Gra sama potnie je na zdania.</li>
+        </ol>
+        <label class="cta cta-file" id="take-label">Wgraj nagranie<input class="vh" id="take-file" type="file" accept="audio/*,video/*"></label>
+        <p class="studio-status" id="studio-status" role="status"></p>
+        <ol class="lines" id="lines"></ol>
+        <p class="studio-lede">Zdanie wyszło źle? Nagraj je osobno i wgraj strzałką przy tym zdaniu.</p>
+        <div class="studio-foot"><button class="cta" id="btn-studio-play" type="button">Zagraj od nowa</button></div>
       </div>
     </section>
   </main>
@@ -913,31 +1004,160 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     pickVoice();
     try { window.speechSynthesis.addEventListener('voiceschanged', pickVoice); } catch (e) { window.speechSynthesis.onvoiceschanged = pickVoice; }
   }
+  // Jedna kolejka dla lektora i zwierzaków: wypowiedź bez `queue` przerywa poprzednią,
+  // z `queue` czeka, aż poprzednia się skończy.
+  let narrSrc = null;
+  let gen = 0;
+  function stopVoices() {
+    gen++;
+    try { window.speechSynthesis.cancel(); } catch (e) {}
+    if (narrSrc) { try { narrSrc.stop(); } catch (e) {} narrSrc = null; }
+  }
+  function voiceBusy() {
+    let tts = false;
+    try { tts = window.speechSynthesis.speaking || window.speechSynthesis.pending; } catch (e) {}
+    return tts || !!narrSrc;
+  }
+  function schedule(queue, fn) {
+    if (!queue) { stopVoices(); fn(); return; }
+    const g = gen;
+    const t0 = performance.now();
+    const tick = () => {
+      if (g !== gen) return;
+      if (!voiceBusy() || performance.now() - t0 > 8000) fn();
+      else setTimeout(tick, 120);
+    };
+    tick();
+  }
   function speak(text, pitch, queue) {
-    if (!soundOn || !voice) return;
+    if (!text) return;
+    schedule(queue, () => {
+      if (!soundOn || !voice) return;
+      try {
+        const u = new SpeechSynthesisUtterance(text);
+        u.voice = voice;
+        u.lang = voice.lang;
+        u.rate = 0.95;
+        u.pitch = pitch || 1.05;
+        window.speechSynthesis.speak(u);
+      } catch (e) {}
+    });
+  }
+
+  /* ---------- głos rodzica ---------- */
+  // Kolejność to kolejność czytania w studiu nagrań.
+  const LINES = [
+    { id: 'start', t: `Cześć, ${NAME}! Dziś to Ty jesteś kurierem. Jedziemy do sortowni po paczki.` },
+    { id: 'depot', t: 'Dotknij każdej paczki. Skaner zrobi pik, a paczka wskoczy do auta.' },
+    { id: 'c1', t: 'Jedna!' },
+    { id: 'c2', t: 'Dwie!' },
+    { id: 'c3', t: 'Trzy!' },
+    { id: 'c4', t: 'Cztery!' },
+    { id: 'loaded', t: 'Wszystkie paczki w aucie! Zamykamy drzwi i ruszamy w trasę.' },
+    { id: 'map', t: 'Domki z paczką świecą. Dotknij domku, do którego jedziemy.' },
+    { id: 'go', t: 'Jedziemy!' },
+    { id: 'door', t: 'Jesteśmy na miejscu. Naciśnij dzwonek!' },
+    { id: 'pick', t: 'Która paczka jest dla tego zwierzaka? Szukaj takiej samej naklejki.' },
+    { id: 'scan', t: 'Teraz zeskanuj paczkę. Naciśnij żółty guzik!' },
+    { id: 'scanned', t: 'Pik! Doręczone. Teraz podpis na skanerze.' },
+    { id: 'next', t: 'Brawo! Dokąd teraz jedziemy?' },
+    { id: 'back', t: 'Wszystkie paczki doręczone! Wracamy do sortowni.' },
+    { id: 'end', t: `Brawo, ${NAME}! Jesteś kurierem na medal!` },
+    { id: 'nopkg', t: 'Dla tego domku nie mamy dziś paczki.' },
+    { id: 'been', t: 'Tu już byliśmy.' },
+  ];
+  const LINE = Object.fromEntries(LINES.map((l) => [l.id, l.t]));
+  const RATE = 16000;
+  const MAX_SEC = 11;
+  const clips = {};    // id zdania -> Float32Array, mono 16 kHz
+  const bufCache = {};
+
+  // G.711 µ-law: 1 bajt na próbkę, żeby zdanie mieściło się w jednym dokumencie bazy.
+  function muEnc(x) {
+    let s = Math.round(Math.max(-1, Math.min(1, x)) * 32767);
+    const sign = s < 0 ? 0x80 : 0;
+    if (s < 0) s = -s;
+    if (s > 32635) s = 32635;
+    s += 0x84;
+    let exp = 7;
+    for (let mask = 0x4000; (s & mask) === 0 && exp > 0; exp--, mask >>= 1);
+    const mant = (s >> (exp + 3)) & 0x0F;
+    return ~(sign | (exp << 4) | mant) & 0xFF;
+  }
+  const MU = new Float32Array(256);
+  for (let i = 0; i < 256; i++) {
+    const u = ~i & 0xFF;
+    const exp = (u >> 4) & 7;
+    const s = ((((u & 0x0F) << 3) + 0x84) << exp) - 0x84;
+    MU[i] = (u & 0x80 ? -s : s) / 32768;
+  }
+  function packClip(pcm) {
+    const bytes = new Uint8Array(pcm.length);
+    for (let i = 0; i < pcm.length; i++) bytes[i] = muEnc(pcm[i]);
+    let bin = '';
+    for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    return { v: 1, enc: 'mulaw', rate: RATE, sec: +(pcm.length / RATE).toFixed(2), b64: btoa(bin) };
+  }
+  function unpackClip(d) {
+    if (!d || d.enc !== 'mulaw' || d.rate !== RATE || typeof d.b64 !== 'string') return null;
     try {
-      if (!queue) window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.voice = voice;
-      u.lang = voice.lang;
-      u.rate = 0.95;
-      u.pitch = pitch || 1.05;
-      window.speechSynthesis.speak(u);
-    } catch (e) {}
+      const bin = atob(d.b64);
+      const out = new Float32Array(bin.length);
+      for (let i = 0; i < bin.length; i++) out[i] = MU[bin.charCodeAt(i)];
+      return out.length ? out : null;
+    } catch (e) { return null; }
+  }
+
+  function clipBuffer(id) {
+    const a = audio();
+    const src = clips[id];
+    if (!a || !src) return null;
+    if (bufCache[id] && bufCache[id].sampleRate === a.sampleRate) return bufCache[id];
+    const ratio = a.sampleRate / RATE;
+    const n = Math.max(1, Math.floor(src.length * ratio));
+    const b = a.createBuffer(1, n, a.sampleRate);
+    const out = b.getChannelData(0);
+    for (let i = 0; i < n; i++) {
+      const p = i / ratio, k = Math.floor(p), f = p - k;
+      const s0 = src[k] || 0, s1 = k + 1 < src.length ? src[k + 1] : s0;
+      out[i] = s0 + (s1 - s0) * f;
+    }
+    return (bufCache[id] = b);
+  }
+  function playClip(id, queue) {
+    schedule(queue, () => {
+      if (!soundOn) return;
+      const a = audio();
+      const b = clipBuffer(id);
+      if (!a || !b) return;
+      const s = a.createBufferSource();
+      s.buffer = b;
+      s.connect(a.destination);
+      s.onended = () => { if (narrSrc === s) narrSrc = null; };
+      narrSrc = s;
+      s.start();
+    });
   }
 
   const radioMsg = $('#radio-msg');
   const radioTag = $('#radio-tag');
-  let lastLine = radioMsg.textContent;
-  function tell(text, queue, silent) {
-    lastLine = text;
-    radioMsg.textContent = text;
-    radioMsg.classList.remove('new');
-    radioTag.classList.remove('live');
-    void radioMsg.offsetWidth;
-    radioMsg.classList.add('new');
-    radioTag.classList.add('live');
-    if (!silent) speak(text, 1.05, queue);
+  let last = { id: null, text: radioMsg.textContent };
+  // Komunikat z bazy: nagranie rodzica, jeśli jest, inaczej głos komputera.
+  function say(id, text, opts) {
+    const o = opts || {};
+    const own = !!(id && clips[id]);
+    if (!o.keepStrip) {
+      last = { id, text };
+      radioMsg.textContent = own ? LINE[id] : text;
+      radioMsg.classList.remove('new');
+      radioTag.classList.remove('live');
+      void radioMsg.offsetWidth;
+      radioMsg.classList.add('new');
+      radioTag.classList.add('live');
+    }
+    if (o.silent) return;
+    if (own) playClip(id, o.queue);
+    else speak(text, 1.05, o.queue);
   }
 
   /* ---------- pomocnicze ---------- */
@@ -1012,7 +1232,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     rear.classList.toggle('open', !allIn);
     goBtn.disabled = !allIn;
     goBtn.classList.toggle('pulse', allIn);
-    tell(allIn ? 'Wszystkie paczki w aucie! Ruszamy w trasę.' : 'Dotknij każdej paczki. Skaner zrobi pik, a paczka wskoczy do auta.', queue);
+    say(allIn ? 'loaded' : 'depot', allIn ? 'Wszystkie paczki w aucie! Ruszamy w trasę.' : LINE.depot, { queue });
   }
 
   function fly(fromEl, toEl, done) {
@@ -1061,14 +1281,14 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
         slot.textContent = R[p.rid].ani;
         sfx.thump();
         renderHUD(state.round.indexOf(p));
-        speak(COUNT_WORDS[idx] || '', 1.15);
+        if (COUNT_WORDS[idx]) say('c' + (idx + 1), COUNT_WORDS[idx], { keepStrip: true });
         if (state.round.every((x) => x.status !== 'sort')) {
           setTimeout(() => {
             rear.classList.remove('open');
             sfx.door();
             goBtn.disabled = false;
             goBtn.classList.add('pulse');
-            tell('Wszystkie paczki w aucie! Zamykamy drzwi i ruszamy w trasę.', true);
+            say('loaded', LINE.loaded, { queue: true });
           }, wait(500));
         }
       });
@@ -1077,7 +1297,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
 
   goBtn.addEventListener('click', () => {
     sfx.honk();
-    enterMap('Domki z paczką świecą. Dotknij domku, do którego jedziemy.');
+    enterMap('map', LINE.map);
   });
 
   /* ---------- mapa ---------- */
@@ -1167,12 +1387,12 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   }
   function renderHouses() { housesG.innerHTML = SPOTS.map(houseSVG).join(''); }
 
-  function enterMap(text, queue) {
+  function enterMap(id, text, queue) {
     show('s-map');
     ensureGeom();
     renderHouses();
     placeVan(state.vanLen);
-    tell(text, queue);
+    say(id, text, { queue });
   }
 
   function onHouse(i, g) {
@@ -1182,15 +1402,15 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     if (!p) {
       sfx.oops();
       restart(g.querySelector('.h-art'), 'nope');
-      tell(`Dla ${r.dla} nie mamy dziś paczki.`);
+      say('nopkg', `Dla ${r.dla} nie mamy dziś paczki.`);
       return;
     }
     if (p.status === 'done') {
-      tell(`Tu już byliśmy. ${r.name} ma swoją paczkę.`);
+      say('been', `Tu już byliśmy. ${r.name} ma swoją paczkę.`);
       return;
     }
     busy = true;
-    tell(`Jedziemy do ${r.dla}!`);
+    say('go', `Jedziemy do ${r.dla}!`);
     drive(geom.stops[i], () => {
       setTimeout(() => { busy = false; enterDoor(p); }, wait(450));
     });
@@ -1245,7 +1465,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     ringing = false;
     scanned = false;
     setStep('bell');
-    tell('Jesteśmy na miejscu. Naciśnij dzwonek!');
+    say('door', LINE.door);
   }
 
   function ring() {
@@ -1261,7 +1481,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
       animalSay(r, 'Dzień dobry! Czy masz paczkę dla mnie?');
       pickRow.innerHTML = shuffle(state.round.filter((x) => x.status === 'van')).map((x) => pkgHTML(x)).join('');
       setStep('pick');
-      tell(`Która paczka jest dla ${r.dla}? Szukaj naklejki ${r.z}.`, true);
+      say('pick', `Która paczka jest dla ${r.dla}? Szukaj naklejki ${r.z}.`, { queue: true });
     }, wait(2000));
   }
   bell.addEventListener('click', ring);
@@ -1289,7 +1509,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     sigWrap.hidden = true;
     scanBtn.disabled = false;
     setStep('scan');
-    tell('Teraz zeskanuj paczkę. Naciśnij żółty guzik!', true);
+    say('scan', LINE.scan, { queue: true });
   });
 
   function squiggle() {
@@ -1332,7 +1552,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
       lcdSt.classList.add('ok');
       sigWrap.hidden = false;
       drawSig();
-      tell(`Pik! Doręczone. ${r.name} podpisuje się na skanerze.`);
+      say('scanned', `Pik! Doręczone. ${r.name} podpisuje się na skanerze.`);
     }, wait(500));
     setTimeout(() => {
       p.status = 'done';
@@ -1344,14 +1564,14 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
       requestAnimationFrame(() => requestAnimationFrame(() => gift.classList.add('open')));
       sfx.yay();
       animalSay(r, r.yay, true);
-      tell('Brawo! Kiedy chcesz, wracamy do auta.', false, true);
+      say(null, 'Brawo! Kiedy chcesz, wracamy do auta.', { silent: true });
     }, wait(2700));
   });
 
   $('#btn-back').addEventListener('click', () => {
     const left = state.round.filter((p) => p.status === 'van').length;
-    if (left) { enterMap(LEFT_MSG[left] || 'Dokąd teraz jedziemy?'); return; }
-    enterMap('Wszystkie paczki doręczone! Wracamy do sortowni.');
+    if (left) { enterMap('next', LEFT_MSG[left] || 'Dokąd teraz jedziemy?'); return; }
+    enterMap('back', LINE.back);
     busy = true;
     setTimeout(() => drive(geom.start, () => {
       setTimeout(() => { busy = false; enterEnd(); }, wait(500));
@@ -1405,7 +1625,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     }).join('');
     sfx.fanfare();
     confetti();
-    tell(`Brawo, ${NAME}! Jesteś kurierem na medal!`);
+    say('end', LINE.end);
   }
 
   $('#btn-again').addEventListener('click', () => {
@@ -1419,7 +1639,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   $('#btn-start').addEventListener('click', () => {
     audio();
     sfx.honk();
-    tell(`Cześć, ${NAME}! Dziś to Ty jesteś kurierem. Jedziemy do sortowni po paczki.`);
+    say('start', LINE.start);
     newRound();
     setTimeout(() => enterDepot(true), wait(900));
   });
@@ -1433,17 +1653,287 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   soundBtn.addEventListener('click', () => {
     soundOn = !soundOn;
     try { localStorage.setItem('kurier-max-sound', soundOn ? 'on' : 'off'); } catch (e) {}
-    if (!soundOn) { try { window.speechSynthesis.cancel(); } catch (e) {} }
+    if (!soundOn) stopVoices();
     else sfx.pop();
     paintSound();
   });
   $('#btn-repeat').addEventListener('click', () => {
     audio();
     restart(radioMsg, 'new');
-    speak(lastLine);
+    if (last.id && clips[last.id]) playClip(last.id);
+    else speak(last.text);
   });
   document.addEventListener('pointerdown', () => { if (soundOn) audio(); });
   paintSound();
+
+  /* ---------- studio nagrań ---------- */
+  const ICON_PLAY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path class="solid" d="M8 5.5v13l10.5-6.5z"/></svg>';
+  const ICON_UP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V5M7.5 9.5 12 5l4.5 4.5M5 19h14"/></svg>';
+  const ICON_DEL = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>';
+  const linesEl = $('#lines');
+  const studioStatus = $('#studio-status');
+  const takeFile = $('#take-file');
+  let store = 'memory';   // 'db' | 'local' | 'memory'
+  let dbApi = null;
+  let canRecord = true;
+  let working = false;
+
+  function status(text, kind) {
+    studioStatus.textContent = text || '';
+    studioStatus.className = 'studio-status' + (kind ? ' ' + kind : '');
+  }
+  function storeNote() {
+    if (store === 'db') return 'Nagrania zapisują się w grze. Usłyszysz je na każdym urządzeniu, na którym otworzysz ten link.';
+    if (store === 'local') return 'Nagrania zapisują się tylko w tej przeglądarce, na tym urządzeniu.';
+    return 'Nagrania działają do zamknięcia tej strony.';
+  }
+  function renderLines() {
+    linesEl.innerHTML = LINES.map((l, i) => {
+      const has = !!clips[l.id];
+      return `<li class="ln${has ? ' has' : ''}" data-id="${l.id}">` +
+        `<span class="ln-num">${i + 1}</span>` +
+        `<span class="ln-body"><span class="ln-text">${l.t}</span><span class="ln-chip">${has ? 'Twój głos' : 'Głos komputera'}</span></span>` +
+        `<span class="ln-act">` +
+          `<button class="mini" type="button" data-act="play" aria-label="Odsłuchaj zdanie ${i + 1}">${ICON_PLAY}</button>` +
+          `<label class="mini" title="Wgraj nagranie tego zdania">${ICON_UP}<input class="vh" type="file" accept="audio/*,video/*" data-act="one" aria-label="Wgraj nagranie zdania ${i + 1}"></label>` +
+          (has ? `<button class="mini" type="button" data-act="del" aria-label="Usuń nagranie zdania ${i + 1}">${ICON_DEL}</button>` : '') +
+        `</span></li>`;
+    }).join('');
+  }
+  function paintVoice() {
+    const n = LINES.filter((l) => clips[l.id]).length;
+    $('#voice-chip').textContent = n ? `Lektor: Twój głos (${n} z ${LINES.length} zdań)` : 'Lektor: głos komputera';
+    $('#btn-studio').hidden = !canRecord;
+    if (state.screen === 's-studio') renderLines();
+  }
+
+  async function initVoice() {
+    try {
+      if (window.claude && typeof window.claude.use === 'function') {
+        const [d, u] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+        dbApi = d;
+        if (u) { try { canRecord = !!(await u.canEdit()); } catch (e) {} }
+      }
+    } catch (e) { dbApi = null; }
+    if (dbApi) {
+      store = 'db';
+      try {
+        const snap = await dbApi.collection('voice').get();
+        snap.docs.forEach((doc) => {
+          const pcm = LINE[doc.id] ? unpackClip(doc.data()) : null;
+          if (pcm) { clips[doc.id] = pcm; delete bufCache[doc.id]; }
+        });
+      } catch (e) {}
+    } else {
+      store = 'local';
+      LINES.forEach((l) => {
+        try {
+          const raw = localStorage.getItem('kurier-max-voice-' + l.id);
+          const pcm = raw ? unpackClip(JSON.parse(raw)) : null;
+          if (pcm) clips[l.id] = pcm;
+        } catch (e) {}
+      });
+    }
+    paintVoice();
+  }
+
+  async function saveClip(id, pcm) {
+    clips[id] = pcm;
+    delete bufCache[id];
+    const packed = packClip(pcm);
+    if (store === 'db') await dbApi.doc('voice/' + id).set(packed);
+    else if (store === 'local') localStorage.setItem('kurier-max-voice-' + id, JSON.stringify(packed));
+  }
+  async function dropClip(id) {
+    delete clips[id];
+    delete bufCache[id];
+    if (store === 'db') await dbApi.doc('voice/' + id).delete();
+    else if (store === 'local') { try { localStorage.removeItem('kurier-max-voice-' + id); } catch (e) {} }
+  }
+
+  // Plik z dyktafonu lub film -> mono 16 kHz.
+  async function fileToPcm(file) {
+    const a = audio();
+    if (!a) throw { name: 'NoAudio' };
+    const ab = await file.arrayBuffer();
+    const buf = await new Promise((res, rej) => {
+      try {
+        const p = a.decodeAudioData(ab, res, rej);
+        if (p && p.then) p.then(res, rej);
+      } catch (e) { rej(e); }
+    });
+    const ch = buf.numberOfChannels, len = buf.length;
+    const data = [];
+    for (let c = 0; c < ch; c++) data.push(buf.getChannelData(c));
+    const ratio = buf.sampleRate / RATE;
+    const n = Math.floor(len / ratio);
+    const out = new Float32Array(n);
+    for (let i = 0; i < n; i++) {
+      const s = Math.floor(i * ratio), e = Math.min(len, Math.max(s + 1, Math.floor((i + 1) * ratio)));
+      let acc = 0;
+      for (let k = s; k < e; k++) for (let c = 0; c < ch; c++) acc += data[c][k];
+      out[i] = acc / ((e - s) * ch);
+    }
+    return out;
+  }
+
+  // Szuka zdań po ciszy między nimi. `want` > 0 skleja najkrótsze przerwy, aż zdań będzie tyle, ile trzeba.
+  function findSegments(pcm, want) {
+    const F = Math.round(RATE * 0.02);
+    const n = Math.floor(pcm.length / F);
+    if (!n) return [];
+    const rms = new Float32Array(n);
+    for (let f = 0; f < n; f++) {
+      let s = 0;
+      for (let i = f * F; i < (f + 1) * F; i++) s += pcm[i] * pcm[i];
+      rms[f] = Math.sqrt(s / F);
+    }
+    const sorted = Array.from(rms).sort((a, b) => a - b);
+    const q = (p) => sorted[Math.min(sorted.length - 1, Math.floor(p * sorted.length))];
+    const noise = q(0.15), peak = q(0.98);
+    const thr = noise + (peak - noise) * 0.12;
+    const GAP = 33, MIN = 10, PAD = 6;   // ramki po 20 ms: przerwa 0,66 s, zdanie min. 0,2 s, margines 0,12 s
+    let segs = [];
+    let start = -1;
+    for (let f = 0; f <= n; f++) {
+      const on = f < n && rms[f] > thr;
+      if (on && start < 0) start = f;
+      if (!on && start >= 0) {
+        const prev = segs[segs.length - 1];
+        if (prev && start - prev[1] < GAP) prev[1] = f;
+        else segs.push([start, f]);
+        start = -1;
+      }
+    }
+    segs = segs.filter((s) => s[1] - s[0] >= MIN);
+    while (want && segs.length > want) {
+      let bi = 0, bg = Infinity;
+      for (let i = 0; i < segs.length - 1; i++) {
+        const g = segs[i + 1][0] - segs[i][1];
+        if (g < bg) { bg = g; bi = i; }
+      }
+      segs.splice(bi, 2, [segs[bi][0], segs[bi + 1][1]]);
+    }
+    return segs.map(([s, e]) => [Math.max(0, (s - PAD) * F), Math.min(pcm.length, (e + PAD) * F)]);
+  }
+  function cut(pcm, s, e) {
+    const out = pcm.slice(s, s + Math.min(e - s, MAX_SEC * RATE));
+    let peak = 0;
+    for (let i = 0; i < out.length; i++) peak = Math.max(peak, Math.abs(out[i]));
+    if (peak > 0.02) { const g = 0.9 / peak; for (let i = 0; i < out.length; i++) out[i] *= g; }
+    const fade = Math.min(160, out.length >> 2);
+    for (let i = 0; i < fade; i++) { const k = i / fade; out[i] *= k; out[out.length - 1 - i] *= k; }
+    return out;
+  }
+  function errText(e) {
+    if (e && (e.name === 'EncodingError' || e.name === 'NotSupportedError' || e instanceof DOMException && !e.code))
+      return 'Nie umiem odczytać tego pliku. Spróbuj nagrania z Dyktafonu albo filmu nagranego telefonem.';
+    if (e && e.name === 'QuotaExceededError') return 'Przeglądarce zabrakło miejsca na nagrania. Nagrania działają do zamknięcia strony.';
+    if (e && e.code === 'quota_exceeded') return 'Baza gry jest pełna. Usuń kilka nagrań i spróbuj jeszcze raz.';
+    if (e && typeof e.code === 'string') return 'Nie udało się zapisać nagrania. Spróbuj jeszcze raz za chwilę.';
+    if (e && e.name === 'NoAudio') return 'Ta przeglądarka nie odtwarza dźwięku z gier. Spróbuj w innej przeglądarce.';
+    return 'Nie umiem odczytać tego pliku. Spróbuj nagrania z Dyktafonu albo filmu nagranego telefonem.';
+  }
+
+  async function processTake(file) {
+    if (!file || working) return;
+    working = true;
+    stopVoices();
+    status('Słucham nagrania…', 'busy');
+    try {
+      const pcm = await fileToPcm(file);
+      const segs = findSegments(pcm, LINES.length);
+      if (segs.length < LINES.length) {
+        status(`Słyszę ${segs.length} z ${LINES.length} zdań. Zrób dłuższe przerwy (2 sekundy ciszy) i wgraj nagranie jeszcze raz albo wgraj brakujące zdania pojedynczo.`, 'warn');
+        return;
+      }
+      for (let i = 0; i < LINES.length; i++) {
+        status(`Zapisuję zdanie ${i + 1} z ${LINES.length}…`, 'busy');
+        await saveClip(LINES[i].id, cut(pcm, segs[i][0], segs[i][1]));
+      }
+      status(`Gotowe! Wszystkie ${LINES.length} zdań mówi teraz Twój głos. Odsłuchaj kilka, żeby sprawdzić.`, 'ok');
+    } catch (e) {
+      status(errText(e), 'warn');
+    } finally {
+      working = false;
+      paintVoice();
+      renderLines();
+    }
+  }
+  async function processOne(id, file) {
+    if (!file || working) return;
+    working = true;
+    stopVoices();
+    status('Słucham nagrania…', 'busy');
+    try {
+      const pcm = await fileToPcm(file);
+      const segs = findSegments(pcm, 0);
+      const s = segs.length ? segs[0][0] : 0;
+      const e = segs.length ? segs[segs.length - 1][1] : pcm.length;
+      await saveClip(id, cut(pcm, s, e));
+      status(`Zapisane: „${LINE[id]}”`, 'ok');
+      playClip(id);
+    } catch (err) {
+      status(errText(err), 'warn');
+    } finally {
+      working = false;
+      paintVoice();
+      renderLines();
+    }
+  }
+
+  takeFile.addEventListener('change', () => {
+    const f = takeFile.files && takeFile.files[0];
+    takeFile.value = '';
+    processTake(f);
+  });
+  linesEl.addEventListener('change', (e) => {
+    const inp = e.target.closest('input[data-act="one"]');
+    if (!inp) return;
+    const f = inp.files && inp.files[0];
+    const id = inp.closest('.ln').dataset.id;
+    inp.value = '';
+    processOne(id, f);
+  });
+  linesEl.addEventListener('click', async (e) => {
+    const b = e.target.closest('button[data-act]');
+    if (!b) return;
+    const id = b.closest('.ln').dataset.id;
+    audio();
+    if (b.dataset.act === 'play') {
+      if (clips[id]) playClip(id);
+      else speak(LINE[id]);
+    } else if (b.dataset.act === 'del' && !working) {
+      stopVoices();
+      try {
+        await dropClip(id);
+        status(`Usunięte. Zdanie ${LINES.findIndex((l) => l.id === id) + 1} mówi znowu głos komputera.`);
+      } catch (err) {
+        status(errText(err), 'warn');
+      }
+      paintVoice();
+      renderLines();
+    }
+  });
+
+  $('#btn-studio').addEventListener('click', () => {
+    audio();
+    stopVoices();
+    show('s-studio');
+    renderLines();
+    status(storeNote());
+    say(null, 'Studio nagrań: Max usłyszy Twój głos.', { silent: true });
+  });
+  $('#btn-studio-play').addEventListener('click', () => {
+    stopVoices();
+    state.round = [];
+    state.current = null;
+    if (geom) state.vanLen = geom.start;
+    renderHUD();
+    show('s-start');
+    say(null, 'Tu baza. Kurierze Max, czekamy na Ciebie!', { silent: true });
+  });
+  initVoice();
 
   /* ---------- przywracanie po aktualizacji strony ---------- */
   try { window.claude?.hot?.snapshot?.(() => ({ round: state.round, vanLen: state.vanLen })); } catch (e) {}
@@ -1454,7 +1944,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
       state.vanLen = typeof d.vanLen === 'number' ? d.vanLen : null;
       renderHUD();
       if (state.round.some((p) => p.status === 'sort')) enterDepot();
-      else if (state.round.some((p) => p.status === 'van')) enterMap('Dokąd teraz jedziemy?');
+      else if (state.round.some((p) => p.status === 'van')) enterMap('next', 'Dokąd teraz jedziemy?');
       else enterEnd();
       return;
     }
