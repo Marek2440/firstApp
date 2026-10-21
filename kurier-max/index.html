@@ -55,6 +55,11 @@
   --gold-deep: #B57F00;
   --shade: rgba(29, 35, 64, .10);
   --veil: rgba(29, 35, 64, .55);
+  --wood: #8A5A33;
+  --wood-light: #E7C79B;
+  --sky-night: #2C3A63;
+  --beam: rgba(255, 240, 180, .6);
+  --drop: rgba(255, 255, 255, .75);
   --ok-soft: #DDF3E5;
   --warn-soft: #FFF0C7;
 
@@ -600,6 +605,225 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
 .log-st { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font-weight: 900; font-size: 13px; color: var(--ok); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .log-st span { font-family: var(--f-emoji); font-size: 24px; line-height: 1; }
 
+/* ---------- plansze ---------- */
+.stage.b-wies { --grass: #B9D46A; --tree: #5C8F2E; }
+.stage.b-zima { --grass: #EAF2F8; --tree: #2E6E55; --water: #CDE8F5; --curb: #FFFFFF; }
+.levels { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.lvl {
+  width: 40px; height: 40px; padding: 0; display: grid; place-items: center; border-radius: 50%;
+  border: 3px solid var(--ink); background: var(--paper); color: var(--ink); box-shadow: 0 3px 0 var(--ink);
+  font-weight: 900; font-size: 17px; cursor: pointer;
+}
+.lvl.on { background: var(--van); color: var(--paper); }
+.lvl:disabled { opacity: .5; box-shadow: none; cursor: default; }
+.lvl svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; }
+
+/* ---------- zapowiedź trasy ---------- */
+#s-intro { display: grid; place-items: center; padding-block: 16px; background: var(--grass); overflow-y: auto; }
+.intro-card {
+  width: 100%; max-width: 520px; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 24px 20px;
+  background: var(--paper); border: 4px solid var(--ink); border-radius: 24px; box-shadow: 0 8px 0 var(--ink); text-align: center;
+}
+.intro-kicker { margin: 0; font-family: var(--f-lcd); font-size: 22px; padding: 2px 10px; border-radius: 6px; background: var(--ink); color: var(--lcd); }
+.intro-num { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: clamp(54px, 8vw + 20px, 84px); line-height: .95; color: var(--van); text-shadow: 0 5px 0 var(--ink); }
+.intro-title { margin: 0; font-family: var(--f-display); font-size: 28px; line-height: 1.1; }
+.intro-news { margin: 0; max-width: 34ch; font-size: 18px; font-weight: 800; line-height: 1.35; }
+.intro-feats { list-style: none; margin: 4px 0 8px; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.intro-feats li { padding: 5px 12px; border-radius: 999px; border: 3px solid var(--ink); background: var(--sky); font-weight: 900; font-size: 15px; }
+.intro-feats li.new { background: var(--sun); }
+.intro-feats li i { font-style: normal; font-family: var(--f-emoji); }
+
+/* ---------- zamówienie ---------- */
+#s-order {
+  display: flex; flex-direction: column; align-items: center; justify-content: space-evenly; gap: 14px; padding-block: 14px;
+  background-color: var(--wall); background-image: repeating-linear-gradient(90deg, transparent 0 26px, var(--wall-line) 26px 30px);
+}
+.order-top { display: flex; align-items: flex-end; justify-content: center; gap: clamp(18px, 6vw, 60px); }
+.phone {
+  width: clamp(116px, 30vw, 180px); aspect-ratio: .52; padding: 12px 8px; border: 0; border-radius: 26px;
+  background: var(--ink); box-shadow: 0 6px 0 var(--device); cursor: pointer;
+}
+.phone.ringing { animation: ring .5s ease-in-out infinite; }
+.phone-screen { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; border-radius: 16px; background: var(--glass); }
+.phone-who { font-family: var(--f-emoji); font-size: clamp(44px, 12vw, 72px); line-height: 1; }
+.phone-want { min-height: 1em; font-family: var(--f-emoji); font-size: clamp(30px, 8vw, 48px); line-height: 1; padding: 4px 10px; border-radius: 14px; background: var(--paper); border: 3px solid var(--ink); }
+.phone-want:empty { visibility: hidden; }
+.phone-ring { font-family: var(--f-display); font-size: 22px; color: var(--van); }
+.phone:not(.ringing) .phone-ring { display: none; }
+.obox { --ob: clamp(140px, 38vw, 230px); position: relative; width: var(--ob); height: calc(var(--ob) * .9); }
+.obox.away { animation: away .8s ease-in forwards; }
+.obox-body { position: absolute; z-index: 2; left: 0; right: 0; bottom: 0; height: 62%; background: var(--box); border: 4px solid var(--ink); border-radius: 6px; }
+.obox-flap { position: absolute; z-index: 3; bottom: 62%; width: 50%; height: 26%; background: var(--box-light); border: 4px solid var(--ink); transition: transform .45s cubic-bezier(.3, 1.3, .5, 1); }
+.obox-flap.l { left: 0; transform-origin: 0 100%; transform: rotate(-28deg); }
+.obox-flap.r { right: 0; transform-origin: 100% 100%; transform: rotate(28deg); }
+.obox.closed .obox-flap { transform: scaleY(.22); }
+.obox-in { position: absolute; z-index: 1; left: 50%; bottom: 46%; transform: translateX(-50%); font-family: var(--f-emoji); font-size: calc(var(--ob) * .34); line-height: 1; transition: opacity .2s; }
+.obox.closed .obox-in { opacity: 0; }
+.obox-tape { position: absolute; z-index: 4; left: 42%; width: 16%; bottom: 36%; height: 34%; background: var(--tape); border: 2px solid var(--box-deep); transform-origin: top; transform: scaleY(0); transition: transform .5s ease-out; }
+.obox.taped .obox-tape { transform: scaleY(1); }
+.obox-label {
+  position: absolute; z-index: 5; right: 7%; bottom: 7%; width: 44%; height: 30%;
+  display: grid; place-items: center; background: var(--paper); border: 2px solid var(--ink); border-top: 7px solid var(--c, var(--van)); border-radius: 4px;
+  font-family: var(--f-emoji); font-size: calc(var(--ob) * .13); line-height: 1;
+  opacity: 0; transform: scale(.4); transition: opacity .2s, transform .35s cubic-bezier(.3, 1.6, .5, 1);
+}
+.obox.labeled .obox-label { opacity: 1; transform: none; }
+.order-bottom { width: 100%; max-width: 640px; display: flex; justify-content: center; }
+.shelf {
+  width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px 14px; padding: 12px 14px 0;
+  background: var(--wood-light); border: 4px solid var(--ink); border-radius: 14px;
+}
+.shelf-item {
+  height: clamp(64px, 11vh, 96px); padding: 0; display: grid; place-items: center;
+  font-family: var(--f-emoji); font-size: clamp(36px, 7vh, 56px); line-height: 1;
+  background: transparent; border: 0; border-bottom: 10px solid var(--wood); cursor: pointer;
+}
+.shelf-item:active { transform: translateY(3px); }
+.shelf-item.shake { animation: shake .45s; }
+.shelf-item.gone { visibility: hidden; }
+.tools { display: flex; justify-content: center; gap: 18px; }
+.tool {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 22px 10px;
+  border-radius: 18px; border: 4px solid var(--ink); background: var(--paper); color: var(--ink); box-shadow: 0 5px 0 var(--ink);
+  font-family: var(--f-display); font-size: 24px; cursor: pointer; animation: pulse 1.3s ease-in-out infinite;
+}
+.tool:active { transform: translateY(5px); box-shadow: none; }
+.tape-roll { width: 64px; height: 64px; border-radius: 50%; background: var(--tape); border: 4px solid var(--ink); box-shadow: inset 0 0 0 14px var(--tape), inset 0 0 0 18px var(--box-deep); }
+.printer { position: relative; width: 84px; height: 56px; border-radius: 10px; background: var(--device); border: 4px solid var(--ink); }
+.printer::after { content: ""; position: absolute; left: 14px; right: 14px; top: 12px; height: 6px; border-radius: 3px; background: var(--ink); }
+.printer-wrap { position: relative; display: flex; flex-direction: column; align-items: center; }
+.print-label {
+  position: absolute; bottom: calc(100% + 8px); left: 50%; width: 110px; height: 72px; padding: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  background: var(--paper); border: 3px solid var(--ink); border-radius: 6px; box-shadow: 0 4px 0 var(--ink); cursor: pointer;
+  transform: translateX(-50%); font-family: var(--f-emoji); font-size: 30px; line-height: 1;
+}
+.print-label.out { animation: printout .6s ease-out; }
+.print-label .pl-bar { width: 100%; height: 8px; margin-top: -10px; }
+.print-label .pl-no { font-family: var(--f-lcd); font-size: 15px; }
+.print-label.gone { visibility: hidden; }
+
+/* ---------- kokpit ---------- */
+#s-cockpit { display: grid; grid-template-rows: 1fr auto; }
+.wind { position: relative; overflow: hidden; background: linear-gradient(var(--sky) 0 46%, var(--grass) 46%); border-bottom: 6px solid var(--ink); }
+#s-cockpit.night .wind { background: linear-gradient(var(--sky-night) 0 46%, var(--grass) 46%); }
+.road3d { position: absolute; left: 50%; bottom: 0; width: 140%; height: 54%; transform: translateX(-50%); background: var(--road); clip-path: polygon(47% 0, 53% 0, 100% 100%, 0 100%); }
+.lane { position: absolute; left: 48.5%; width: 3%; top: 0; bottom: 0; background: repeating-linear-gradient(to bottom, var(--paper) 0 34px, transparent 34px 80px); clip-path: polygon(45% 0, 55% 0, 100% 100%, 0 100%); }
+.scenery { position: absolute; top: 46%; bottom: 0; width: 22%; background: radial-gradient(circle at 50% 50%, var(--tree) 0 20px, transparent 21px) 0 0 / 100% 110px repeat-y; }
+.scenery.l { left: 0; } .scenery.r { right: 0; }
+.dest { position: absolute; top: 46%; left: 56%; width: 120px; transform-origin: 50% 100%; transform: translate(-50%, -100%) scale(.2); }
+.dest svg { display: block; width: 100%; height: auto; }
+.tlight { position: absolute; top: 46%; left: 66%; width: 44px; transform-origin: 50% 100%; transform: translate(-50%, -100%) scale(.3); display: flex; flex-direction: column; align-items: center; }
+.tl-box { display: flex; flex-direction: column; gap: 4px; padding: 5px; border-radius: 10px; background: var(--ink); }
+.tl { width: 26px; height: 26px; border-radius: 50%; background: var(--device); }
+.tlight.red .tl.r { background: var(--brake); box-shadow: 0 0 14px var(--brake); }
+.tlight.yellow .tl.y { background: var(--sun); box-shadow: 0 0 14px var(--sun); }
+.tlight.green .tl.g { background: var(--ok); box-shadow: 0 0 14px var(--ok); }
+.tl-pole { width: 8px; height: 90px; background: var(--ink); }
+.beams { position: absolute; left: 50%; bottom: 0; width: 90%; height: 56%; transform: translateX(-50%); background: radial-gradient(ellipse at 50% 100%, var(--beam), transparent 70%); opacity: 0; transition: opacity .3s; pointer-events: none; }
+.beams.on { opacity: 1; }
+.rain {
+  position: absolute; inset: 0; pointer-events: none; opacity: .85; transition: opacity .4s;
+  background-image: radial-gradient(ellipse 2px 7px at 50% 50%, var(--drop) 90%, transparent), radial-gradient(ellipse 2px 7px at 50% 50%, var(--drop) 90%, transparent);
+  background-size: 46px 60px, 70px 90px; background-position: 0 0, 23px 30px;
+  animation: rainfall .5s linear infinite;
+}
+.rain.snow { background-image: radial-gradient(circle 4px at 50% 50%, var(--paper) 90%, transparent), radial-gradient(circle 3px at 50% 50%, var(--paper) 90%, transparent); animation-duration: 1.6s; }
+.rain.cleared { opacity: .12; }
+.wiper { position: absolute; bottom: 0; left: 32%; width: 6px; height: 62%; border-radius: 3px; background: var(--ink); transform-origin: 50% 100%; transform: rotate(-72deg); pointer-events: none; }
+.wiper.on { animation: wipe .8s ease-in-out infinite alternate; }
+.trip { position: absolute; top: 10px; left: 16px; right: 16px; display: flex; align-items: center; gap: 8px; font-family: var(--f-emoji); font-size: 24px; }
+.trip-bar { flex: 1; height: 14px; border-radius: 7px; background: var(--paper); border: 3px solid var(--ink); overflow: hidden; }
+.trip-bar i { display: block; height: 100%; width: 0; background: var(--van); }
+.dash { display: flex; flex-direction: column; gap: 10px; padding-block: 10px 14px; background: var(--device); }
+.dash-row { display: flex; align-items: center; justify-content: center; gap: clamp(10px, 3vw, 24px); }
+.dbtn {
+  width: 56px; height: 56px; padding: 0; display: grid; place-items: center; flex: none;
+  border-radius: 14px; border: 3px solid var(--ink); background: var(--paper); color: var(--ink); box-shadow: 0 4px 0 var(--ink); cursor: pointer;
+}
+.dbtn svg { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.dbtn .solid { fill: currentColor; stroke: none; }
+.dbtn.on { background: var(--sun); }
+.dbtn.blinking { animation: blinkbg .5s steps(2) infinite; }
+.dbtn:active { transform: translateY(4px); box-shadow: none; }
+.wheel { position: relative; width: clamp(104px, 26vw, 140px); aspect-ratio: 1; border: 0; padding: 0; background: none; cursor: pointer; transition: transform .3s; }
+.wheel svg { display: block; width: 100%; height: 100%; }
+.wheel.turn-l { transform: rotate(-24deg); } .wheel.turn-r { transform: rotate(24deg); }
+.horn {
+  position: absolute; left: 50%; top: 50%; width: 42%; height: 42%; transform: translate(-50%, -50%);
+  border-radius: 50%; border: 4px solid var(--ink); background: var(--sun); color: var(--ink); cursor: pointer; padding: 0; display: grid; place-items: center;
+}
+.horn svg { width: 60%; height: 60%; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.gauge { width: clamp(70px, 20vw, 110px); display: flex; flex-direction: column; gap: 4px; font-family: var(--f-lcd); font-size: 15px; line-height: 1; color: var(--lcd); }
+.gauge-bar { height: 14px; border-radius: 7px; border: 2px solid var(--paper); overflow: hidden; }
+.gauge-bar i { display: block; height: 100%; width: 0; background: var(--ok); }
+.gauge.low .gauge-bar i { background: var(--brake); }
+.pedals { display: flex; justify-content: center; gap: 18px; }
+.pedal {
+  padding: 16px 24px 18px; border-radius: 18px; border: 4px solid var(--ink); box-shadow: 0 6px 0 var(--ink);
+  font-family: var(--f-display); font-size: clamp(22px, 2vw + 14px, 30px); line-height: 1; color: var(--paper);
+  cursor: pointer; touch-action: none; -webkit-user-select: none; user-select: none;
+}
+.pedal.brake { background: var(--brake); }
+.pedal.gas { min-width: 150px; background: var(--ok); }
+.pedal.down { transform: translateY(6px); box-shadow: none; }
+
+/* ---------- stacja paliw ---------- */
+#s-fuel { display: grid; place-items: center; padding-block: 16px; background: linear-gradient(var(--sky) 0 60%, var(--curb) 60%); }
+.fuel-wrap { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 22px 40px; }
+.pump { width: clamp(150px, 40vw, 210px); display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: 18px 18px 6px 6px; background: var(--ok); border: 4px solid var(--ink); box-shadow: 0 6px 0 var(--ink); }
+.pump-head { font-family: var(--f-display); font-size: 26px; text-align: center; color: var(--paper); text-shadow: 0 2px 0 var(--ink); }
+.pump-lcd { padding: 6px 10px; border-radius: 8px; background: var(--lcd); color: var(--lcd-ink); border: 3px solid var(--ink); font-family: var(--f-lcd); font-size: 34px; text-align: right; font-variant-numeric: tabular-nums; }
+.pump-gauge { height: 22px; border-radius: 11px; background: var(--paper); border: 3px solid var(--ink); overflow: hidden; }
+.pump-gauge i { display: block; height: 100%; width: 0; background: var(--sun); }
+.fuel-side { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.nozzle {
+  width: clamp(150px, 40vw, 200px); padding: 18px 14px; border-radius: 20px; border: 4px solid var(--ink);
+  background: var(--paper); color: var(--ink); box-shadow: 0 6px 0 var(--ink); cursor: pointer; touch-action: none;
+  font-weight: 900; font-size: 18px; line-height: 1.25; -webkit-user-select: none; user-select: none; animation: pulse 1.3s ease-in-out infinite;
+}
+.nozzle svg { display: block; width: 80px; height: 80px; margin: 0 auto 6px; fill: none; stroke: var(--ink); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+.nozzle.down { transform: translateY(6px); box-shadow: none; animation: none; background: var(--sun); }
+.nozzle:disabled { opacity: .5; animation: none; }
+
+/* ---------- odbiór paczki i stacja na mapie ---------- */
+.weigh-row { display: flex; align-items: flex-end; gap: 22px; }
+.send-box { padding: 0; border: 0; background: none; cursor: pointer; animation: pulse 1.3s ease-in-out infinite; }
+.scale { width: clamp(140px, 34vw, 190px); display: flex; flex-direction: column; align-items: center; }
+.scale-top { width: 100%; min-height: 70px; display: flex; align-items: flex-end; justify-content: center; border-bottom: 10px solid var(--device); }
+.scale-body { width: 86%; padding: 8px; border-radius: 0 0 12px 12px; background: var(--curb); border: 4px solid var(--ink); border-top: 0; }
+.scale-lcd { padding: 4px 8px; border-radius: 6px; background: var(--lcd); color: var(--lcd-ink); border: 3px solid var(--ink); font-family: var(--f-lcd); font-size: 28px; text-align: right; font-variant-numeric: tabular-nums; }
+.reveal-note { margin: 0; max-width: 24ch; font-family: var(--f-display); font-size: 26px; line-height: 1.15; color: var(--paper); text-shadow: 2px 0 0 var(--ink), -2px 0 0 var(--ink), 0 2px 0 var(--ink), 0 -2px 0 var(--ink), 0 4px 0 var(--ink); }
+.reveal-note span { font-family: var(--f-emoji); }
+.house.pickup .halo { transform-box: fill-box; transform-origin: center; animation: halo 1.4s ease-in-out infinite; }
+.pick-wrap { display: none; }
+.house.pickup .pick-wrap { display: inline; }
+.pk-box { fill: var(--plate); stroke: var(--ink); stroke-width: 3; }
+.pk-arr { fill: none; stroke: var(--paper); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+#station { cursor: pointer; outline: none; }
+#map:not(.has-fuel) #station { display: none; }
+#station .hit { fill: transparent; }
+#station:focus-visible .hit { stroke: var(--plate); stroke-width: 5; stroke-dasharray: 10 6; }
+#station .halo { fill: var(--sun); opacity: 0; }
+#map.low-fuel #station .halo { transform-box: fill-box; transform-origin: center; animation: halo 1.2s ease-in-out infinite; }
+.st-roof { fill: var(--brake); stroke: var(--ink); stroke-width: 3; }
+.st-pole { fill: var(--curb); stroke: var(--ink); stroke-width: 2; }
+.st-pump { fill: var(--ok); stroke: var(--ink); stroke-width: 3; }
+.st-screen { fill: var(--lcd); }
+.st-t { font-family: var(--f-display); font-size: 13px; fill: var(--paper); }
+.track li.pick { border-color: var(--plate); }
+.track li.pick::before {
+  content: "↑"; position: absolute; left: -7px; top: -7px; width: 19px; height: 19px; border-radius: 50%;
+  display: grid; place-items: center; background: var(--plate); color: var(--paper); border: 2px solid var(--ink); font: 900 12px/1 var(--f-body);
+}
+.track li.order span, .track li.wait span { opacity: .45; filter: grayscale(1); }
+
+@keyframes away { to { transform: translateX(120vw) rotate(8deg); } }
+@keyframes printout { from { transform: translate(-50%, 60px) scaleY(.2); opacity: 0; } to { transform: translateX(-50%); opacity: 1; } }
+@keyframes rainfall { to { background-position: 0 60px, 23px 120px; } }
+@keyframes wipe { from { transform: rotate(-72deg); } to { transform: rotate(72deg); } }
+@keyframes blinkbg { 50% { background: var(--sun); } }
+
 /* ---------- studio nagrań ---------- */
 #s-studio { overflow-y: auto; background: var(--sky); }
 .studio { max-width: 660px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; padding-block: 18px 30px; }
@@ -753,7 +977,8 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
       <div class="cloud cloud-2" aria-hidden="true"></div>
       <div class="start-sky gutter">
         <h1 class="title">Kurier <span>Max</span></h1>
-        <p class="lede">Dziś to Ty rozwozisz paczki po osiedlu.</p>
+        <p class="lede" id="start-level">Trasa 1: Pierwsza trasa</p>
+        <div class="levels" id="levels" role="group" aria-label="Wybierz trasę"></div>
       </div>
       <div class="start-street">
         <button class="van-side" id="start-van" type="button" aria-label="Klakson">
@@ -831,6 +1056,16 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
           <path class="d-gate-l" d="M364 408H436M364 421H436M364 434H436M364 447H436"/>
         </g>
         <g id="trees"></g>
+        <g id="station" transform="translate(505 600)" role="button" tabindex="0" aria-label="Stacja paliw">
+          <circle class="halo" r="64"/>
+          <rect class="hit" x="-62" y="-62" width="124" height="112" rx="18"/>
+          <rect class="st-pole" x="-46" y="-34" width="8" height="62"/>
+          <rect class="st-pole" x="38" y="-34" width="8" height="62"/>
+          <rect class="st-roof" x="-56" y="-52" width="112" height="20" rx="4"/>
+          <text class="st-t" x="0" y="-37" text-anchor="middle">PALIWO</text>
+          <rect class="st-pump" x="-14" y="-18" width="28" height="46" rx="4"/>
+          <rect class="st-screen" x="-9" y="-12" width="18" height="10" rx="2"/>
+        </g>
         <g id="houses"></g>
         <g id="van" transform="translate(400 735)" role="button" aria-label="Auto kuriera, klakson">
           <g class="van-td" id="van-td">
@@ -875,7 +1110,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
             <div class="scanner">
               <div class="lcd">
                 <div id="lcd-no"></div>
-                <div>DLA: <span id="lcd-to"></span></div>
+                <div><span id="lcd-to-l">DLA:</span> <span id="lcd-to"></span></div>
                 <span class="lcd-st" id="lcd-st"></span>
                 <div class="sig-wrap" id="sig-wrap" hidden>PODPIS:<svg class="sig" viewBox="0 0 200 50" aria-hidden="true"><path id="sig-path"/></svg></div>
               </div>
@@ -884,7 +1119,17 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
             <div class="held" id="held"></div>
           </div>
         </div>
+        <div class="step" id="st-weigh" hidden>
+          <div class="weigh-row">
+            <button class="send-box" id="send-box" type="button" aria-label="Połóż paczkę na wadze"></button>
+            <div class="scale">
+              <div class="scale-top" id="scale-top"></div>
+              <div class="scale-body"><div class="scale-lcd" id="scale-lcd">0,0 kg</div></div>
+            </div>
+          </div>
+        </div>
         <div class="step" id="st-reveal" hidden>
+          <p class="reveal-note" id="reveal-note" hidden></p>
           <div class="gift" id="gift"><span class="gift-item" id="gift-item"></span><div class="gift-body"></div><div class="gift-lid"></div></div>
           <button class="cta pulse" id="btn-back" type="button">Wracam do auta</button>
         </div>
@@ -899,12 +1144,106 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
           <div class="disc"><span>KURIER<br>NA MEDAL</span></div>
         </div>
         <h2 class="end-title">Brawo, Max!</h2>
-        <p class="end-sub">Wszystkie paczki są u swoich odbiorców.</p>
+        <p class="end-sub" id="end-sub">Wszystkie paczki są u swoich odbiorców.</p>
         <div class="report">
           <div class="report-head"><span>RAPORT Z TRASY</span><span id="report-date"></span></div>
           <ul class="log" id="log"></ul>
         </div>
         <button class="cta" id="btn-again" type="button">Jeszcze jedna trasa</button>
+      </div>
+    </section>
+
+    <!-- ZAPOWIEDŹ TRASY -->
+    <section class="screen gutter" id="s-intro" hidden>
+      <div class="intro-card">
+        <p class="intro-kicker" id="intro-board"></p>
+        <h2 class="intro-num" id="intro-num">Trasa 1</h2>
+        <p class="intro-title" id="intro-title"></p>
+        <p class="intro-news" id="intro-news"></p>
+        <ul class="intro-feats" id="intro-feats"></ul>
+        <button class="cta pulse" id="btn-intro" type="button">Jedziemy!</button>
+      </div>
+    </section>
+
+    <!-- ZAMÓWIENIE -->
+    <section class="screen gutter" id="s-order" hidden>
+      <div class="order-top">
+        <button class="phone" id="phone" type="button" aria-label="Odbierz telefon">
+          <span class="phone-screen">
+            <span class="phone-who" id="phone-who"></span>
+            <span class="phone-ring">DRYŃ!</span>
+            <span class="phone-want" id="phone-want"></span>
+          </span>
+        </button>
+        <div class="obox" id="obox" hidden>
+          <span class="obox-in" id="obox-in"></span>
+          <span class="obox-body"></span>
+          <span class="obox-flap l"></span><span class="obox-flap r"></span>
+          <span class="obox-tape"></span>
+          <span class="obox-label" id="obox-label"></span>
+        </div>
+      </div>
+      <div class="order-bottom">
+        <div class="shelf" id="shelf" hidden></div>
+        <div class="tools" id="tools" hidden>
+          <button class="tool" id="btn-tape" type="button"><span class="tape-roll"></span>Taśma</button>
+          <div class="printer-wrap" id="printer-wrap">
+            <button class="print-label" id="print-label" type="button" aria-label="Przyklej naklejkę na paczkę" hidden></button>
+            <button class="tool" id="btn-print" type="button"><span class="printer"></span>Drukuj</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- KOKPIT -->
+    <section class="screen" id="s-cockpit" hidden>
+      <div class="wind">
+        <div class="scenery l" id="scen-l"></div><div class="scenery r" id="scen-r"></div>
+        <div class="road3d"><div class="lane" id="lane"></div></div>
+        <div class="beams" id="beams"></div>
+        <div class="dest" id="dest"></div>
+        <div class="tlight" id="tlight" hidden><div class="tl-box"><span class="tl r"></span><span class="tl y"></span><span class="tl g"></span></div><div class="tl-pole"></div></div>
+        <div class="rain" id="rain" hidden></div>
+        <div class="wiper" id="wiper"></div>
+        <div class="trip" aria-hidden="true"><span>🚚</span><span class="trip-bar"><i id="trip-fill"></i></span><span id="trip-end">🏠</span></div>
+      </div>
+      <div class="dash gutter">
+        <div class="dash-row">
+          <button class="dbtn" id="blink-l" type="button" aria-label="Kierunkowskaz w lewo"><svg viewBox="0 0 32 32"><path class="solid" d="M4 16 15 6v6h13v8H15v6z"/></svg></button>
+          <div class="wheel" id="wheel">
+            <svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="44" fill="none" stroke="#1D2340" stroke-width="12"/><circle cx="50" cy="50" r="44" fill="none" stroke="#555C75" stroke-width="6"/><path d="M8 54h84M50 54v40" stroke="#1D2340" stroke-width="10"/></svg>
+            <button class="horn" id="horn" type="button" aria-label="Klakson"><svg viewBox="0 0 24 24"><path d="M4 10h3l6-4v12l-6-4H4zM16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/></svg></button>
+          </div>
+          <button class="dbtn" id="blink-r" type="button" aria-label="Kierunkowskaz w prawo"><svg viewBox="0 0 32 32"><path class="solid" d="M28 16 17 6v6H4v8h13v6z"/></svg></button>
+        </div>
+        <div class="dash-row">
+          <div class="gauge" id="fuel-gauge"><span>PALIWO</span><div class="gauge-bar"><i id="fuel-fill"></i></div></div>
+          <button class="dbtn" id="wipers" type="button" aria-label="Wycieraczki"><svg viewBox="0 0 32 32"><path d="M4 24a12 12 0 0 1 24 0M16 24 9 11"/></svg></button>
+          <button class="dbtn" id="lights" type="button" aria-label="Światła"><svg viewBox="0 0 32 32"><path d="M14 8a8 8 0 0 0 0 16zM18 10h10M18 16h10M18 22h10"/></svg></button>
+          <div class="gauge" id="speed-gauge"><span>PRĘDKOŚĆ</span><div class="gauge-bar"><i id="speed-fill"></i></div></div>
+        </div>
+        <div class="pedals">
+          <button class="pedal brake" id="brake" type="button">HAMULEC</button>
+          <button class="pedal gas" id="gas" type="button">GAZ</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- STACJA PALIW -->
+    <section class="screen gutter" id="s-fuel" hidden>
+      <div class="fuel-wrap">
+        <div class="pump">
+          <div class="pump-head">PALIWO</div>
+          <div class="pump-lcd"><span id="pump-l">0,0</span> l</div>
+          <div class="pump-gauge"><i id="pump-fill"></i></div>
+        </div>
+        <div class="fuel-side">
+          <button class="nozzle" id="nozzle" type="button">
+            <svg viewBox="0 0 80 80" aria-hidden="true"><path d="M14 30h34l12-10v40L48 50H30v16H14z" fill="#FFD23F"/><path d="M60 26h10v28"/></svg>
+            Przytrzymaj, żeby tankować
+          </button>
+          <button class="cta" id="btn-pay" type="button" hidden>Płacę kartą</button>
+        </div>
       </div>
     </section>
 
@@ -953,16 +1292,48 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   'use strict';
 
   const NAME = 'Max';
-  const COUNT = 4;
-  // Odbiorcy: indeks = numer domku na mapie (1–6).
-  const R = [
-    { ani: '🐱', name: 'Kot Mruczek', dla: 'kota Mruczka', z: 'z kotem', color: '#E84855', roof: '#8E2531', street: 'ul. Słoneczna 1', item: '🧶', yay: 'Miau! Mój kłębek wełny! Dziękuję!', pitch: 1.6 },
-    { ani: '🐶', name: 'Pies Burek', dla: 'psa Burka', z: 'z pieskiem', color: '#3F7FE0', roof: '#1F4790', street: 'ul. Słoneczna 2', item: '🦴', yay: 'Hau hau! Moja kość! Dziękuję!', pitch: 1.0 },
-    { ani: '🐻', name: 'Miś Bartek', dla: 'misia Bartka', z: 'z misiem', color: '#F5B700', roof: '#8F6400', street: 'ul. Leśna 3', item: '🍯', yay: 'Mmm, mój miodek! Dziękuję!', pitch: 0.6 },
-    { ani: '🐸', name: 'Żaba Kumka', dla: 'żaby Kumki', z: 'z żabką', color: '#2BA66B', roof: '#146343', street: 'ul. Stawowa 4', item: '☂️', yay: 'Kum kum! Mój parasol! Dziękuję!', pitch: 1.4 },
-    { ani: '🐰', name: 'Królik Kicek', dla: 'królika Kicka', z: 'z królikiem', color: '#8C5CE6', roof: '#4F2F96', street: 'ul. Polna 5', item: '🥕', yay: 'Hurra! Moje marchewki! Dziękuję!', pitch: 1.8 },
-    { ani: '🦊', name: 'Lis Rudek', dla: 'lisa Rudka', z: 'z liskiem', color: '#EF6FA8', roof: '#9C2F63', street: 'ul. Leśna 6', item: '🪁', yay: 'Super! Mój latawiec! Dziękuję!', pitch: 1.2 },
+  // Kolory domków są wspólne; plansze zmieniają mieszkańców, ulice i krajobraz.
+  const HOUSE = [
+    { color: '#E84855', roof: '#8E2531' }, { color: '#3F7FE0', roof: '#1F4790' }, { color: '#F5B700', roof: '#8F6400' },
+    { color: '#2BA66B', roof: '#146343' }, { color: '#8C5CE6', roof: '#4F2F96' }, { color: '#EF6FA8', roof: '#9C2F63' },
   ];
+  // Odbiorcy: indeks = numer domku na mapie (1–6). `want` to biernik do zamówienia („Poproszę …”).
+  const BOARDS = [
+    { id: 'osiedle', name: 'Osiedle', icon: '🏘️', people: [
+      { ani: '🐱', name: 'Kot Mruczek', dla: 'kota Mruczka', z: 'z kotem', street: 'ul. Słoneczna 1', item: '🧶', want: 'kłębek wełny', yay: 'Miau! Mój kłębek wełny! Dziękuję!', pitch: 1.6 },
+      { ani: '🐶', name: 'Pies Burek', dla: 'psa Burka', z: 'z pieskiem', street: 'ul. Słoneczna 2', item: '🦴', want: 'kość', yay: 'Hau hau! Moja kość! Dziękuję!', pitch: 1.0 },
+      { ani: '🐻', name: 'Miś Bartek', dla: 'misia Bartka', z: 'z misiem', street: 'ul. Leśna 3', item: '🍯', want: 'miód', yay: 'Mmm, mój miodek! Dziękuję!', pitch: 0.6 },
+      { ani: '🐸', name: 'Żaba Kumka', dla: 'żaby Kumki', z: 'z żabką', street: 'ul. Stawowa 4', item: '☂️', want: 'parasol', yay: 'Kum kum! Mój parasol! Dziękuję!', pitch: 1.4 },
+      { ani: '🐰', name: 'Królik Kicek', dla: 'królika Kicka', z: 'z królikiem', street: 'ul. Polna 5', item: '🥕', want: 'marchewki', yay: 'Hurra! Moje marchewki! Dziękuję!', pitch: 1.8 },
+      { ani: '🦊', name: 'Lis Rudek', dla: 'lisa Rudka', z: 'z liskiem', street: 'ul. Leśna 6', item: '🪁', want: 'latawiec', yay: 'Super! Mój latawiec! Dziękuję!', pitch: 1.2 },
+    ] },
+    { id: 'wies', name: 'Wieś', icon: '🚜', people: [
+      { ani: '🐮', name: 'Krowa Mućka', dla: 'krowy Mućki', z: 'z krówką', street: 'ul. Wiejska 1', item: '🔔', want: 'dzwonek', yay: 'Muuu! Mój dzwonek! Dziękuję!', pitch: 0.7 },
+      { ani: '🐷', name: 'Świnka Pola', dla: 'świnki Poli', z: 'ze świnką', street: 'ul. Sadowa 2', item: '🍎', want: 'jabłka', yay: 'Chrum chrum! Moje jabłka! Dziękuję!', pitch: 1.5 },
+      { ani: '🐔', name: 'Kura Zosia', dla: 'kury Zosi', z: 'z kurką', street: 'ul. Łąkowa 3', item: '🌽', want: 'kukurydzę', yay: 'Ko ko ko! Moja kukurydza! Dziękuję!', pitch: 1.7 },
+      { ani: '🐑', name: 'Owca Bela', dla: 'owcy Beli', z: 'z owieczką', street: 'ul. Polna 4', item: '🧣', want: 'szalik', yay: 'Beee! Mój szalik! Dziękuję!', pitch: 1.3 },
+      { ani: '🐴', name: 'Koń Bystry', dla: 'konia Bystrego', z: 'z konikiem', street: 'ul. Wiejska 5', item: '🌾', want: 'siano', yay: 'Iha ha! Moje siano! Dziękuję!', pitch: 0.9 },
+      { ani: '🦆', name: 'Kaczka Kwacia', dla: 'kaczki Kwaci', z: 'z kaczuszką', street: 'ul. Stawowa 6', item: '🍞', want: 'chleb', yay: 'Kwa kwa! Mój chleb! Dziękuję!', pitch: 1.6 },
+    ] },
+    { id: 'zima', name: 'Zimowy las', icon: '🌲', night: true, people: [
+      { ani: '🐧', name: 'Pingwin Pik', dla: 'pingwina Pika', z: 'z pingwinem', street: 'ul. Śnieżna 1', item: '🐟', want: 'rybę', yay: 'Hurra! Moja ryba! Dziękuję!', pitch: 1.5 },
+      { ani: '🦭', name: 'Foka Fifi', dla: 'foki Fifi', z: 'z foką', street: 'ul. Lodowa 2', item: '⚽', want: 'piłkę', yay: 'Super! Moja piłka! Dziękuję!', pitch: 1.3 },
+      { ani: '🦉', name: 'Sowa Hu', dla: 'sowy Hu', z: 'z sową', street: 'ul. Leśna 3', item: '🔦', want: 'latarkę', yay: 'Hu hu! Moja latarka! Dziękuję!', pitch: 0.8 },
+      { ani: '🦔', name: 'Jeż Kolec', dla: 'jeża Kolca', z: 'z jeżykiem', street: 'ul. Sosnowa 4', item: '🍄', want: 'grzybek', yay: 'Mój grzybek! Dziękuję!', pitch: 1.6 },
+      { ani: '🐿️', name: 'Wiewiórka Ruda', dla: 'wiewiórki Rudej', z: 'z wiewiórką', street: 'ul. Śnieżna 5', item: '🌰', want: 'orzechy', yay: 'Hurra! Moje orzechy! Dziękuję!', pitch: 1.8 },
+      { ani: '🦌', name: 'Jeleń Rogaś', dla: 'jelenia Rogasia', z: 'z jelonkiem', street: 'ul. Lodowa 6', item: '🛷', want: 'sanki', yay: 'Juhu! Moje sanki! Dziękuję!', pitch: 0.8 },
+    ] },
+  ];
+  // Kolejne trasy: każda dokłada jedną nowość, co dwie zmienia się plansza. board -1 = losowa.
+  const LEVELS = [
+    { title: 'Pierwsza trasa', board: 0, count: 3, news: 'Rozwozisz paczki po osiedlu.' },
+    { title: 'Zamówienie', board: 0, count: 3, order: true, news: 'Nowość: zwierzak dzwoni i zamawia, a Ty pakujesz paczkę.' },
+    { title: 'Za kierownicą', board: 1, count: 4, order: true, cockpit: true, news: 'Nowość: sam prowadzisz auto. Uważaj na światła!' },
+    { title: 'Stacja paliw', board: 1, count: 4, order: true, cockpit: true, fuel: true, news: 'Nowość: gdy brakuje paliwa, tankujesz na stacji.' },
+    { title: 'Paczka do odebrania', board: 2, count: 4, order: true, cockpit: true, fuel: true, pickup: true, news: 'Nowość: odbierasz paczkę od zwierzaka i ważysz ją.' },
+    { title: 'Wielka trasa', board: -1, count: 5, order: true, cockpit: true, fuel: true, pickup: true, news: 'Wszystko naraz, na losowej planszy.' },
+  ];
+  let R = [];
   // Domek (x, y) i miejsce postoju auta na jezdni (sx, sy).
   const SPOTS = [
     { x: 290, y: 115, sx: 290, sy: 220 },
@@ -973,21 +1344,39 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     { x: 60, y: 470, sx: 160, sy: 470 },
   ];
   const START = { x: 400, y: 720 };
-  const TREES = [[255, 315], [545, 315], [545, 600], [330, 632], [70, 110], [730, 110], [400, 105], [70, 830], [730, 830], [400, 850], [60, 300], [60, 640], [740, 300], [740, 640]];
-  const COUNT_WORDS = ['Jedna!', 'Dwie!', 'Trzy!', 'Cztery!'];
+  const STATION = { x: 640, y: 600 };
+  const TREES = [[255, 315], [545, 315], [330, 632], [70, 110], [730, 110], [400, 105], [70, 830], [730, 830], [400, 850], [60, 300], [60, 640], [740, 300], [740, 640]];
+  const COUNT_WORDS = ['Jedna!', 'Dwie!', 'Trzy!', 'Cztery!', 'Pięć!'];
   const LEFT_MSG = {
+    5: 'Zostało jeszcze pięć przystanków. Dokąd teraz jedziemy?',
+    4: 'Zostały jeszcze cztery przystanki. Dokąd teraz jedziemy?',
     3: 'Zostały jeszcze trzy paczki. Dokąd teraz jedziemy?',
     2: 'Zostały jeszcze dwie paczki. Dokąd teraz?',
     1: 'Została ostatnia paczka. Do kogo jedziemy?',
   };
-  const STATUS = { sort: 'w sortowni', van: 'w aucie', done: 'doręczona' };
+  const STATUS = { order: 'do spakowania', sort: 'w sortowni', van: 'w aucie', done: 'doręczona', wait: 'do odebrania' };
 
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const $ = (s) => document.querySelector(s);
   const wait = (ms) => (reduce ? Math.min(ms, 120) : ms);
 
-  const state = { round: [], vanLen: null, current: null, step: null, screen: 's-start' };
+  const state = { round: [], vanLen: null, current: null, step: null, screen: 's-start', level: 0, board: 0, fuel: 100 };
   let busy = false;
+  // Najdalsza odblokowana trasa (na tym urządzeniu).
+  let progress = 0;
+  try { progress = Math.min(LEVELS.length - 1, Math.max(0, parseInt(localStorage.getItem('kurier-max-level'), 10) || 0)); } catch (e) {}
+  state.level = progress;
+  const stage = document.querySelector('.stage');
+  function useBoard(b) {
+    state.board = b;
+    R = BOARDS[b].people.map((p, i) => Object.assign({}, p, HOUSE[i]));
+    stage.className = 'stage b-' + BOARDS[b].id;
+  }
+  useBoard(Math.max(0, LEVELS[state.level].board));
+  const lvl = () => LEVELS[state.level];
+  const dels = () => state.round.filter((p) => p.kind !== 'pick');
+  const pendingStops = () => state.round.filter((p) => (p.kind === 'pick' ? p.status === 'wait' : p.status === 'van'));
+  const lowFuel = () => !!lvl().fuel && state.fuel < 35 && pendingStops().length > 0;
   // Każdy restart podbija `epoch`, więc odłożone kroki poprzedniej rozgrywki już się nie wykonają.
   let epoch = 0;
   function later(fn, ms) {
@@ -1034,6 +1423,12 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     oops() { tone(392, 0, 0.16, 'sine', 0.16); tone(311, 0.16, 0.28, 'sine', 0.16); },
     thump() { tone(150, 0, 0.12, 'triangle', 0.25); tone(100, 0.02, 0.15, 'sine', 0.2); },
     door() { tone(120, 0, 0.18, 'triangle', 0.3); tone(80, 0.05, 0.2, 'sine', 0.25); },
+    phone() { [0, 0.12, 0.24, 0.36, 0.9, 1.02, 1.14, 1.26].forEach((t, i) => tone(i % 2 ? 1100 : 880, t, 0.1, 'square', 0.04)); },
+    tape() { tone(700, 0, 0.12, 'sawtooth', 0.03); tone(500, 0.1, 0.25, 'sawtooth', 0.03); },
+    print() { for (let i = 0; i < 7; i++) tone(1300 + (i % 2) * 200, i * 0.07, 0.04, 'square', 0.035); },
+    tick() { tone(1500, 0, 0.03, 'square', 0.05); },
+    glug() { tone(180 + Math.random() * 60, 0, 0.09, 'sine', 0.22); },
+    swish() { tone(320, 0, 0.25, 'triangle', 0.06); },
     fanfare() {
       const n = [523.3, 659.3, 784, 1046.5, 784, 1046.5];
       const at = [0, 0.14, 0.28, 0.42, 0.62, 0.76];
@@ -1149,6 +1544,24 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     { id: 'end', t: `Brawo, ${NAME}! Jesteś kurierem na medal!` },
     { id: 'nopkg', t: 'Dla tego domku nie mamy dziś paczki.' },
     { id: 'been', t: 'Tu już byliśmy.' },
+    { id: 'c5', t: 'Pięć!' },
+    { id: 'intro', t: 'Nowa trasa! Zobacz, co dziś nowego.' },
+    { id: 'phone', t: 'Dzwoni telefon! Odbierz.' },
+    { id: 'shelf', t: 'Znajdź na półce to, o co prosi zwierzak.' },
+    { id: 'tape', t: 'Zaklej pudełko taśmą.' },
+    { id: 'label', t: 'Wydrukuj naklejkę i przyklej ją na paczkę.' },
+    { id: 'packed', t: 'Paczka gotowa! Jedzie na taśmę do sortowni.' },
+    { id: 'gas', t: 'Trzymaj gaz, żeby jechać.' },
+    { id: 'red', t: 'Czerwone światło! Hamuj!' },
+    { id: 'green', t: 'Zielone! Gaz!' },
+    { id: 'blink', t: 'Domek jest po prawej. Włącz kierunkowskaz w prawo!' },
+    { id: 'rain', t: 'Pada! Włącz wycieraczki.' },
+    { id: 'lights', t: 'Robi się ciemno. Włącz światła.' },
+    { id: 'fuel', t: 'Mało paliwa! Jedziemy na stację.' },
+    { id: 'pump', t: 'Przytrzymaj pistolet, żeby zatankować.' },
+    { id: 'full', t: 'Pełny bak! Teraz zapłać kartą.' },
+    { id: 'pickup', t: 'Ten zwierzak chce nadać paczkę. Połóż ją na wadze.' },
+    { id: 'picked', t: 'Paczka odebrana! Zawieziemy ją do sortowni.' },
   ];
   const LINE = Object.fromEntries(LINES.map((l) => [l.id, l.t]));
   const RATE = 16000;
@@ -1280,39 +1693,54 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   const track = $('#track');
   function renderHUD(popIdx) {
     if (!state.round.length) {
-      track.innerHTML = '<li></li>'.repeat(COUNT);
+      track.innerHTML = '<li></li>'.repeat(lvl().count + (lvl().pickup ? 1 : 0));
       return;
     }
-    track.innerHTML = state.round.map((p, i) =>
-      `<li class="${p.status}${i === popIdx ? ' pop' : ''}" aria-label="${R[p.rid].name}: ${STATUS[p.status]}"><span>${R[p.rid].ani}</span></li>`
-    ).join('');
+    track.innerHTML = state.round.map((p, i) => {
+      const st = p.kind === 'pick' && p.status === 'done' ? 'odebrana' : STATUS[p.status];
+      return `<li class="${p.kind === 'pick' ? 'pick ' : ''}${p.status}${i === popIdx ? ' pop' : ''}" aria-label="${R[p.rid].name}: ${st}"><span>${R[p.rid].ani}</span></li>`;
+    }).join('');
   }
 
   function newRound() {
-    const ids = shuffle([0, 1, 2, 3, 4, 5]).slice(0, COUNT);
-    state.round = ids.map((rid) => {
+    const lv = lvl();
+    useBoard(lv.board < 0 ? Math.floor(Math.random() * BOARDS.length) : lv.board);
+    const ids = shuffle([0, 1, 2, 3, 4, 5]);
+    const mk = (rid, kind, status) => {
       const digits = String(Math.floor(Math.random() * 1e9)).padStart(9, '0');
-      return { rid, no: `MX${digits}PL`, short: `MX ${digits.slice(-4)}`, status: 'sort', time: null };
-    });
+      return { rid, kind, no: `MX${digits}PL`, short: `MX ${digits.slice(-4)}`, status, time: null };
+    };
+    state.round = ids.slice(0, lv.count).map((rid) => mk(rid, 'del', 'sort'));
+    if (lv.order) { state.round[0].status = 'order'; state.round[0].ordered = true; }
+    if (lv.pickup) state.round.push(mk(ids[lv.count], 'pick', 'wait'));
+    state.fuel = 100;
+    state.current = null;
+    if (geom) state.vanLen = geom.start;
     renderHUD();
   }
 
   /* ---------- sortownia ---------- */
   const pkgsEl = $('#pkgs');
   const rear = $('#rear');
-  const slots = [...document.querySelectorAll('.slot')];
+  const hold = rear.querySelector('.hold');
+  let slots = [];
   const goBtn = $('#btn-go');
 
   function enterDepot(queue) {
     show('s-depot');
-    const loaded = state.round.filter((p) => p.status !== 'sort');
+    const ds = dels();
+    const loaded = ds.filter((p) => p.status !== 'sort');
+    hold.innerHTML = '<div class="slot"></div>'.repeat(ds.length);
+    hold.style.gridTemplate = ds.length > 4 ? '1fr 1fr / repeat(3, 1fr)' : ds.length === 3 ? '1fr 1fr / 1fr 1fr' : '';
+    slots = [...hold.querySelectorAll('.slot')];
     slots.forEach((s, i) => {
       const p = loaded[i];
       s.classList.toggle('full', !!p);
       s.textContent = p ? R[p.rid].ani : '';
     });
-    pkgsEl.innerHTML = state.round.map((p) => pkgHTML(p, p.status !== 'sort')).join('');
-    const allIn = loaded.length === state.round.length;
+    pkgsEl.style.setProperty('--pkg', ds.length > 4 ? 'clamp(56px, min(16vw, 13vh), 110px)' : '');
+    pkgsEl.innerHTML = ds.map((p) => pkgHTML(p, p.status !== 'sort')).join('');
+    const allIn = loaded.length === ds.length;
     rear.classList.toggle('open', !allIn);
     goBtn.disabled = !allIn;
     goBtn.classList.toggle('pulse', allIn);
@@ -1349,11 +1777,11 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   pkgsEl.addEventListener('click', (e) => {
     const b = e.target.closest('.pkg');
     if (!b || b.classList.contains('gone') || b.dataset.busy) return;
-    const p = state.round.find((x) => x.rid === +b.dataset.rid);
+    const p = dels().find((x) => x.rid === +b.dataset.rid);
     if (!p || p.status !== 'sort') return;
     p.status = 'van';
     b.dataset.busy = '1';
-    const idx = state.round.filter((x) => x.status !== 'sort').length - 1;
+    const idx = dels().filter((x) => x.status !== 'sort').length - 1;
     const slot = slots[idx];
     sfx.beep();
     b.classList.add('scan');
@@ -1367,7 +1795,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
         sfx.thump();
         renderHUD(state.round.indexOf(p));
         if (COUNT_WORDS[idx]) say('c' + (idx + 1), COUNT_WORDS[idx], { keepStrip: true });
-        if (state.round.every((x) => x.status !== 'sort')) {
+        if (dels().every((x) => x.status !== 'sort')) {
           later(() => {
             rear.classList.remove('open');
             sfx.door();
@@ -1409,7 +1837,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
       }
       return best;
     };
-    geom = { total, stops: SPOTS.map((s) => near(s.sx, s.sy)), start: near(START.x, START.y) };
+    geom = { total, stops: SPOTS.map((s) => near(s.sx, s.sy)), start: near(START.x, START.y), station: near(STATION.x, STATION.y) };
     if (state.vanLen == null) state.vanLen = geom.start;
   }
 
@@ -1454,7 +1882,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   function houseSVG(s, i) {
     const r = R[i];
     const p = state.round.find((x) => x.rid === i);
-    const cls = !p ? '' : p.status === 'done' ? ' done' : p.status === 'van' ? ' pending' : '';
+    const cls = !p ? '' : p.status === 'done' ? ' done' : p.status === 'van' ? ' pending' : p.status === 'wait' ? ' pickup' : '';
     return `<g class="house${cls}" data-i="${i}" transform="translate(${s.x} ${s.y})" tabindex="0" role="button" aria-label="${r.name}, ${r.street}">` +
       `<circle class="halo" cy="-8" r="80"/>` +
       `<rect class="hit" x="-70" y="-78" width="140" height="140" rx="22"/>` +
@@ -1470,14 +1898,19 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
       `</g>` +
       `<g class="badge-wrap" transform="translate(46 -62)"><g class="badge"><rect class="b-box" x="-17" y="-14" width="34" height="28" rx="4"/><rect class="b-tape" x="-4" y="-12" width="8" height="24"/></g></g>` +
       `<g class="check-wrap" transform="translate(46 -56)"><circle class="ck-c" r="16"/><path class="ck-p" d="M-7 0L-2 5L7 -5"/></g>` +
+      `<g class="pick-wrap" transform="translate(46 -62)"><g class="badge"><rect class="pk-box" x="-17" y="-14" width="34" height="28" rx="4"/><path class="pk-arr" d="M0 8V-8M-7 -1L0 -8L7 -1"/></g></g>` +
       `</g>`;
   }
   function renderHouses() { housesG.innerHTML = SPOTS.map(houseSVG).join(''); }
+  const mapSvg = $('#map');
+  const station = $('#station');
 
   function enterMap(id, text, queue) {
     show('s-map');
     ensureGeom();
     renderHouses();
+    mapSvg.classList.toggle('has-fuel', !!lvl().fuel);
+    mapSvg.classList.toggle('low-fuel', lowFuel());
     placeVan(state.vanLen);
     say(id, text, { queue });
   }
@@ -1496,15 +1929,31 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
       say('been', `Tu już byliśmy. ${r.name} ma swoją paczkę.`);
       return;
     }
+    if (lowFuel()) {
+      sfx.oops();
+      say('fuel', 'Mało paliwa! Najpierw jedziemy na stację. Stuknij stację z napisem paliwo.');
+      return;
+    }
     busy = true;
-    say('go', `Jedziemy do ${r.dla}!`);
-    drive(geom.stops[i], () => {
-      later(() => { busy = false; enterDoor(p); }, wait(450));
-    });
+    say('go', p.kind === 'pick' ? `Jedziemy do ${r.dla} po paczkę!` : `Jedziemy do ${r.dla}!`);
+    const arrive = () => later(() => { busy = false; enterDoor(p); }, wait(450));
+    if (lvl().cockpit) {
+      later(() => enterCockpit(i, () => { state.vanLen = geom.stops[i]; arrive(); }), wait(700));
+    } else {
+      drive(geom.stops[i], arrive);
+    }
   }
+  function onStation() {
+    if (busy || !lvl().fuel) return;
+    if (!lowFuel()) { say(null, 'Bak jest jeszcze pełny. Jedziemy z paczkami!'); return; }
+    busy = true;
+    drive(geom.station, () => later(() => { busy = false; enterFuel(); }, wait(400)));
+  }
+  station.addEventListener('click', onStation);
+  station.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onStation(); } });
   housesG.addEventListener('click', (e) => {
     const g = e.target.closest('.house');
-    if (g) onHouse(+g.dataset.i, g);
+    if (g) { audio(); onHouse(+g.dataset.i, g); }
   });
   housesG.addEventListener('keydown', (e) => {
     const g = e.target.closest('.house');
@@ -1528,7 +1977,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   let ringing = false, scanned = false;
 
   function setStep(s) {
-    ['bell', 'pick', 'scan', 'reveal'].forEach((k) => { $('#st-' + k).hidden = k !== s; });
+    ['bell', 'pick', 'weigh', 'scan', 'reveal'].forEach((k) => { $('#st-' + k).hidden = k !== s; });
     state.step = s;
     bell.classList.toggle('waiting', s === 'bell');
   }
@@ -1551,9 +2000,47 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     gift.classList.remove('open');
     ringing = false;
     scanned = false;
+    weighed = false;
     setStep('bell');
     say('door', LINE.door);
   }
+  let weighed = false;
+  const sendBox = $('#send-box');
+  const scaleTop = $('#scale-top');
+  const scaleLcd = $('#scale-lcd');
+  function toScan(cur, r) {
+    held.innerHTML = pkgHTML(cur);
+    held.querySelector('.pkg').tabIndex = -1;
+    lcdNo.textContent = cur.no;
+    $('#lcd-to-l').textContent = cur.kind === 'pick' ? 'OD:' : 'DLA:';
+    lcdTo.textContent = r.name.toUpperCase();
+    lcdSt.textContent = cur.kind === 'pick' ? 'DO NADANIA' : 'W DORĘCZENIU';
+    lcdSt.classList.remove('ok');
+    sigWrap.hidden = true;
+    scanBtn.disabled = false;
+    setStep('scan');
+    say('scan', LINE.scan, { queue: true });
+  }
+  sendBox.addEventListener('click', () => {
+    if (state.step !== 'weigh' || weighed) return;
+    weighed = true;
+    const cur = state.current;
+    const r = R[cur.rid];
+    sfx.thump();
+    scaleTop.innerHTML = sendBox.innerHTML;
+    sendBox.innerHTML = '';
+    const kg = 0.8 + Math.random() * 4;
+    const t0 = performance.now();
+    const ep = epoch;
+    const count = (now) => {
+      if (ep !== epoch) return;
+      const k = Math.min(1, (now - t0) / 1100);
+      scaleLcd.textContent = (kg * k).toFixed(1).replace('.', ',') + ' kg';
+      if (k < 1) requestAnimationFrame(count);
+      else { sfx.beep(); say(null, `Paczka waży ${(Math.round(kg * 10) / 10).toString().replace('.', ',')} kilograma.`); later(() => toScan(cur, r), wait(1600)); }
+    };
+    requestAnimationFrame(count);
+  });
 
   function ring() {
     if (state.step !== 'bell' || ringing) return;
@@ -1565,6 +2052,16 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     bell.classList.remove('waiting');
     later(() => { doorway.classList.add('open'); sfx.door(); }, wait(1100));
     later(() => {
+      if (state.current.kind === 'pick') {
+        animalSay(r, 'Dzień dobry! Mam paczkę do wysłania.');
+        sendBox.innerHTML = pkgHTML(state.current);
+        sendBox.querySelector('.pkg').tabIndex = -1;
+        scaleTop.innerHTML = '';
+        scaleLcd.textContent = '0,0 kg';
+        setStep('weigh');
+        say('pickup', LINE.pickup, { queue: true });
+        return;
+      }
       animalSay(r, 'Dzień dobry! Czy masz paczkę dla mnie?');
       pickRow.innerHTML = shuffle(state.round.filter((x) => x.status === 'van')).map((x) => pkgHTML(x)).join('');
       setStep('pick');
@@ -1587,16 +2084,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     }
     sfx.pop();
     animalSay(r, 'Tak! To moja paczka!');
-    held.innerHTML = pkgHTML(cur);
-    held.querySelector('.pkg').tabIndex = -1;
-    lcdNo.textContent = cur.no;
-    lcdTo.textContent = r.name.toUpperCase();
-    lcdSt.textContent = 'W DORĘCZENIU';
-    lcdSt.classList.remove('ok');
-    sigWrap.hidden = true;
-    scanBtn.disabled = false;
-    setStep('scan');
-    say('scan', LINE.scan, { queue: true });
+    toScan(cur, r);
   });
 
   function squiggle() {
@@ -1637,28 +2125,38 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     later(() => {
       sfx.beep2();
       pk.classList.remove('scan');
-      lcdSt.textContent = 'DORĘCZONO';
+      lcdSt.textContent = p.kind === 'pick' ? 'ODEBRANO' : 'DORĘCZONO';
       lcdSt.classList.add('ok');
       sigWrap.hidden = false;
       drawSig();
-      say('scanned', `Pik! Doręczone. ${r.name} podpisuje się na skanerze.`);
+      if (p.kind === 'pick') say('picked', `Pik! Paczka odebrana. ${r.name} podpisuje się na skanerze.`);
+      else say('scanned', `Pik! Doręczone. ${r.name} podpisuje się na skanerze.`);
     }, wait(500));
     later(() => {
       p.status = 'done';
       p.time = new Date().toISOString();
       renderHUD(state.round.indexOf(p));
-      giftItem.textContent = r.item;
+      const note = $('#reveal-note');
       gift.classList.remove('open');
+      gift.hidden = p.kind === 'pick';
+      note.hidden = p.kind !== 'pick';
       setStep('reveal');
-      requestAnimationFrame(() => requestAnimationFrame(() => gift.classList.add('open')));
       sfx.yay();
-      animalSay(r, r.yay, true);
+      if (p.kind === 'pick') {
+        note.innerHTML = `<span>📦</span> Paczka od: ${r.name} jedzie z nami do sortowni!`;
+        animalSay(r, 'Dziękuję! Pa pa!', true);
+      } else {
+        giftItem.textContent = r.item;
+        requestAnimationFrame(() => requestAnimationFrame(() => gift.classList.add('open')));
+        animalSay(r, r.yay, true);
+      }
       say(null, 'Brawo! Kiedy chcesz, wracamy do auta.', { silent: true });
     }, wait(2700));
   });
 
   $('#btn-back').addEventListener('click', () => {
-    const left = state.round.filter((p) => p.status === 'van').length;
+    const left = pendingStops().length;
+    if (left && lowFuel()) { enterMap('fuel', LINE.fuel); return; }
     if (left) { enterMap('next', LEFT_MSG[left] || 'Dokąd teraz jedziemy?'); return; }
     enterMap('back', LINE.back);
     busy = true;
@@ -1708,18 +2206,450 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     $('#log').innerHTML = state.round.map((p) => {
       const r = R[p.rid];
       const t = p.time ? new Date(p.time).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }) : '';
+      const pick = p.kind === 'pick';
       return `<li><span class="log-ani">${r.ani}</span>` +
         `<span class="log-main"><b>${r.name}</b><small>${r.street} · ${p.no}</small></span>` +
-        `<span class="log-st"><span>${r.item}</span>DORĘCZONO ${t}</span></li>`;
+        `<span class="log-st"><span>${pick ? '📦' : r.item}</span>${pick ? 'ODEBRANO' : 'DORĘCZONO'} ${t}</span></li>`;
     }).join('');
+    // Ukończona trasa odblokowuje następną.
+    let unlocked = '';
+    if (state.level === progress && progress < LEVELS.length - 1) {
+      progress++;
+      try { localStorage.setItem('kurier-max-level', String(progress)); } catch (e) {}
+      unlocked = ` Odblokowana trasa ${progress + 1}: ${LEVELS[progress].title}!`;
+    }
+    $('#end-sub').textContent = `Trasa ${state.level + 1} zaliczona.` + unlocked;
+    $('#btn-again').textContent = state.level < LEVELS.length - 1 ? 'Następna trasa' : 'Jeszcze jedna wielka trasa';
     sfx.fanfare();
     confetti();
     say('end', LINE.end);
   }
 
   $('#btn-again').addEventListener('click', () => {
+    state.level = Math.min(state.level + 1, LEVELS.length - 1);
+    enterIntro();
+  });
+
+  /* ---------- wybór trasy i zapowiedź ---------- */
+  const levelsEl = $('#levels');
+  const LOCK = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="11" width="12" height="9" rx="2"/><path d="M8.5 11V8a3.5 3.5 0 0 1 7 0v3"/></svg>';
+  function renderLevels() {
+    levelsEl.innerHTML = LEVELS.map((lv, i) =>
+      `<button class="lvl${i === state.level ? ' on' : ''}" type="button" data-l="${i}" ${i > progress ? 'disabled' : ''} aria-label="Trasa ${i + 1}: ${lv.title}${i > progress ? ' (jeszcze zamknięta)' : ''}">${i > progress ? LOCK : i + 1}</button>`
+    ).join('');
+    $('#start-level').textContent = `Trasa ${state.level + 1}: ${lvl().title}`;
+  }
+  levelsEl.addEventListener('click', (e) => {
+    const b = e.target.closest('.lvl');
+    if (!b || b.disabled) return;
+    state.level = +b.dataset.l;
+    useBoard(Math.max(0, lvl().board));
+    sfx.pop();
+    renderLevels();
+    renderHUD();
+  });
+
+  function enterIntro() {
+    // Bez stopVoices: powitanie ze startu ma się dokończyć przed zapowiedzią.
+    epoch++;
+    busy = false;
+    stopCockpit();
+    stopEngine();
     newRound();
-    enterDepot();
+    const lv = lvl();
+    const b = BOARDS[state.board];
+    show('s-intro');
+    $('#intro-board').textContent = `${b.icon} ${b.name}`;
+    $('#intro-num').textContent = `Trasa ${state.level + 1}`;
+    $('#intro-title').textContent = lv.title;
+    $('#intro-news').textContent = lv.news;
+    const prev = LEVELS[state.level - 1] || {};
+    const feats = [
+      ['📦', `${lv.count} ${lv.count < 5 ? 'paczki' : 'paczek'}`, false],
+      lv.order && ['☎️', 'zamówienie', !prev.order],
+      lv.cockpit && ['🚦', 'jazda autem', !prev.cockpit],
+      lv.fuel && ['⛽', 'stacja paliw', !prev.fuel],
+      lv.pickup && ['⬆️', 'odbiór paczki', !prev.pickup],
+    ].filter(Boolean);
+    $('#intro-feats').innerHTML = feats.map(([i, t, n]) => `<li class="${n && state.level ? 'new' : ''}"><i>${i}</i> ${t}</li>`).join('');
+    say('intro', `Trasa ${state.level + 1}. ${lv.title}. ${lv.news}`, { queue: true });
+  }
+  $('#btn-intro').addEventListener('click', () => {
+    audio();
+    if (dels().some((p) => p.status === 'order')) enterOrder();
+    else enterDepot();
+  });
+
+  /* ---------- zamówienie: telefon, półka, pakowanie ---------- */
+  const phone = $('#phone');
+  const obox = $('#obox');
+  const oboxIn = $('#obox-in');
+  const shelf = $('#shelf');
+  const tools = $('#tools');
+  const tapeBtn = $('#btn-tape');
+  const printWrap = $('#printer-wrap');
+  const printBtn = $('#btn-print');
+  const printLabel = $('#print-label');
+  let ostep = null;
+  let ringTimer = 0;
+  const orderItem = () => state.round.find((p) => p.ordered);
+  function setOStep(s) {
+    ostep = s;
+    state.step = s;
+    phone.classList.toggle('ringing', s === 'ring');
+    obox.hidden = s === 'ring' || s === 'call';
+    shelf.hidden = s !== 'shelf';
+    tools.hidden = s !== 'tape' && s !== 'label';
+    tapeBtn.hidden = s !== 'tape';
+    printWrap.hidden = s !== 'label';
+  }
+  function enterOrder(queue) {
+    const p = orderItem();
+    if (!p) { enterDepot(queue); return; }
+    const r = R[p.rid];
+    p.status = 'order';
+    renderHUD();
+    show('s-order');
+    $('#phone-who').textContent = r.ani;
+    $('#phone-want').textContent = '';
+    obox.className = 'obox';
+    obox.style.setProperty('--c', r.color);
+    oboxIn.textContent = '';
+    $('#obox-label').textContent = r.ani;
+    printLabel.hidden = true;
+    printLabel.classList.remove('gone');
+    printBtn.disabled = false;
+    setOStep('ring');
+    sfx.phone();
+    clearInterval(ringTimer);
+    ringTimer = setInterval(() => {
+      if (state.screen === 's-order' && ostep === 'ring') sfx.phone();
+      else clearInterval(ringTimer);
+    }, 2400);
+    say('phone', LINE.phone, { queue });
+  }
+  phone.addEventListener('click', () => {
+    if (ostep !== 'ring') return;
+    clearInterval(ringTimer);
+    const r = R[orderItem().rid];
+    sfx.pop();
+    setOStep('call');
+    $('#phone-want').textContent = r.item;
+    stopVoices();
+    speak(`Halo! Tu ${r.name}. Poproszę ${r.want}!`, r.pitch);
+    later(() => {
+      shelf.innerHTML = shuffle(R.map((x, i) => i)).map((i) =>
+        `<button class="shelf-item" type="button" data-i="${i}" aria-label="${R[i].want}">${R[i].item}</button>`).join('');
+      setOStep('shelf');
+      say('shelf', LINE.shelf, { queue: true });
+    }, wait(1800));
+  });
+  shelf.addEventListener('click', (e) => {
+    const b = e.target.closest('.shelf-item');
+    if (!b || ostep !== 'shelf') return;
+    const p = orderItem();
+    const r = R[p.rid];
+    if (+b.dataset.i !== p.rid) {
+      sfx.oops();
+      restart(b, 'shake');
+      speak(`To nie to. Poproszę ${r.want}!`, r.pitch);
+      return;
+    }
+    ostep = 'busy';
+    sfx.pop();
+    fly(b, oboxIn, () => {
+      oboxIn.textContent = r.item;
+      sfx.thump();
+      setOStep('tape');
+      say('tape', LINE.tape);
+    });
+  });
+  tapeBtn.addEventListener('click', () => {
+    if (ostep !== 'tape') return;
+    ostep = 'busy';
+    sfx.tape();
+    obox.classList.add('closed');
+    later(() => { obox.classList.add('taped'); sfx.tape(); }, wait(450));
+    later(() => { setOStep('label'); say('label', LINE.label); }, wait(1100));
+  });
+  printBtn.addEventListener('click', () => {
+    if (ostep !== 'label' || !printLabel.hidden) return;
+    const p = orderItem();
+    const r = R[p.rid];
+    sfx.print();
+    printLabel.innerHTML = `<span class="pl-bar" style="background:${r.color}"></span><span>${r.ani}</span><span class="pl-no">${p.short}</span>`;
+    printLabel.hidden = false;
+    restart(printLabel, 'out');
+  });
+  printLabel.addEventListener('click', () => {
+    if (ostep !== 'label') return;
+    ostep = 'busy';
+    const p = orderItem();
+    fly(printLabel, $('#obox-label'), () => {
+      obox.classList.add('labeled');
+      sfx.thump();
+      p.status = 'sort';
+      renderHUD(state.round.indexOf(p));
+      say('packed', LINE.packed);
+      later(() => restart(obox, 'away'), wait(900));
+      later(() => enterDepot(true), wait(1900));
+    });
+  });
+
+  /* ---------- kokpit: Max prowadzi auto do domku ---------- */
+  const cockpit = $('#s-cockpit');
+  const gasBtn = $('#gas');
+  const brakeBtn = $('#brake');
+  const blinkL = $('#blink-l');
+  const blinkR = $('#blink-r');
+  const wheel = $('#wheel');
+  const tlight = $('#tlight');
+  const rainEl = $('#rain');
+  const STOP_D = 0.45;      // linia zatrzymania przed światłami
+  const TRIP_SPEED = 0.2;   // pełna trasa w 5 s przy pełnym gazie
+  const ck = { raf: 0, eng: null, blinkTimer: 0 };
+  function engineLoop() {
+    const a = audio();
+    if (!a || !soundOn) return null;
+    const o = a.createOscillator(), f = a.createBiquadFilter(), g = a.createGain();
+    o.type = 'sawtooth';
+    o.frequency.value = 45;
+    f.type = 'lowpass';
+    f.frequency.value = 300;
+    g.gain.value = 0.0001;
+    o.connect(f).connect(g).connect(a.destination);
+    o.start();
+    g.gain.setTargetAtTime(0.05, a.currentTime, 0.15);
+    return {
+      set(v) { o.frequency.setTargetAtTime(42 + v * 50, a.currentTime, 0.1); },
+      stop() { try { g.gain.setTargetAtTime(0.0001, a.currentTime, 0.05); o.stop(a.currentTime + 0.3); } catch (e) {} },
+    };
+  }
+  function miniHouse(r) {
+    return `<svg viewBox="-62 -70 124 122" aria-hidden="true"><rect class="h-wall" x="-46" y="-18" width="92" height="66" rx="5" style="fill:${r.color}"/>` +
+      `<path class="h-roof" d="M-58 -14L0 -64L58 -14Z" style="fill:${r.roof}"/><rect class="h-door" x="-12" y="14" width="24" height="34" rx="3"/>` +
+      `<text class="h-ani" x="0" y="-24" text-anchor="middle">${r.ani}</text></svg>`;
+  }
+  function stopCockpit() {
+    cancelAnimationFrame(ck.raf);
+    if (ck.eng) ck.eng.stop();
+    ck.eng = null;
+    clearInterval(ck.blinkTimer);
+    ck.gas = ck.brake = false;
+    [gasBtn, brakeBtn].forEach((b) => b.classList.remove('down'));
+  }
+  function setBlink(dir) {
+    clearInterval(ck.blinkTimer);
+    ck.blinkL = dir === 'l';
+    ck.blinkR = dir === 'r';
+    blinkL.classList.toggle('blinking', ck.blinkL);
+    blinkR.classList.toggle('blinking', ck.blinkR);
+    wheel.classList.toggle('turn-l', ck.blinkL);
+    wheel.classList.toggle('turn-r', ck.blinkR);
+    if (dir) ck.blinkTimer = setInterval(() => sfx.tick(), 420);
+  }
+  function enterCockpit(i, onArrive) {
+    stopCockpit();
+    const r = R[i];
+    const night = !!BOARDS[state.board].night;
+    Object.assign(ck, {
+      target: i, done: onArrive, v: 0, d: 0, off: 0, stopT: 0, praised: false, asked: {},
+      light: Math.random() < 0.8 || !state.sawLight ? 'green' : null, lightDone: false,
+      rain: Math.random() < 0.45, wipers: false, lights: false,
+    });
+    state.sawLight = true;
+    setBlink(null);
+    show('s-cockpit');
+    cockpit.classList.toggle('night', night);
+    $('#dest').innerHTML = miniHouse(r);
+    $('#trip-end').textContent = r.ani;
+    rainEl.hidden = !ck.rain;
+    rainEl.classList.toggle('snow', state.board === 2);
+    rainEl.classList.remove('cleared');
+    $('#wiper').classList.remove('on');
+    $('#wipers').classList.remove('on');
+    $('#beams').classList.remove('on');
+    $('#lights').classList.remove('on');
+    $('#fuel-gauge').classList.toggle('low', state.fuel < 35);
+    $('#fuel-fill').style.width = state.fuel + '%';
+    ck.eng = engineLoop();
+    say('gas', LINE.gas, { queue: true });
+    if (night) later(() => ask('lights'), wait(2600));
+    if (ck.rain) later(() => ask('rain'), wait(4200));
+    paintCockpit();
+    const ep = epoch;
+    let t0 = performance.now();
+    const loop = (now) => {
+      if (ep !== epoch || state.screen !== 's-cockpit') return;
+      const dt = Math.min(0.05, (now - t0) / 1000);
+      t0 = now;
+      stepCockpit(dt);
+      if (ck.d < 1) ck.raf = requestAnimationFrame(loop);
+    };
+    ck.raf = requestAnimationFrame(loop);
+  }
+  function ask(key) {
+    if (ck.asked[key] || state.screen !== 's-cockpit') return;
+    if (key === 'lights' && ck.lights) return;
+    if (key === 'rain' && ck.wipers) return;
+    ck.asked[key] = true;
+    say(key, LINE[key], { queue: key !== 'red' });
+  }
+  function stepCockpit(dt) {
+    ck.v += (ck.gas ? 0.9 : -0.5) * dt;
+    if (ck.brake) ck.v -= 2.6 * dt;
+    ck.v = Math.max(0, Math.min(1, ck.v));
+    let d = ck.d + ck.v * dt * TRIP_SPEED;
+    // Światła: zielone, przy zbliżaniu żółte i czerwone; na czerwonym auto staje przed linią.
+    if (ck.light === 'green' && !ck.lightDone && d > 0.27) { ck.light = 'yellow'; ck.lightT = 0.7; }
+    else if (ck.light === 'yellow') {
+      ck.lightT -= dt;
+      if (ck.lightT <= 0) { ck.light = 'red'; ask('red'); }
+    } else if (ck.light === 'red') {
+      if (d >= STOP_D) { d = STOP_D; ck.v = 0; }
+      if (ck.v < 0.03) {
+        ck.stopT += dt;
+        if (ck.stopT > 1.6) { ck.light = 'green'; ck.lightDone = true; say('green', LINE.green); }
+      }
+    }
+    // Skręt do domku dopiero z włączonym kierunkowskazem w prawo.
+    if (d >= 0.84 && !ck.blinkR) {
+      ask('blink');
+      if (d >= 0.9) { d = 0.9; ck.v = 0; }
+    }
+    ck.d = Math.min(1, d);
+    ck.off += ck.v * dt * 900;
+    if (ck.eng) ck.eng.set(ck.v);
+    paintCockpit();
+    if (ck.d >= 1) arriveCockpit();
+  }
+  function paintCockpit() {
+    $('#lane').style.backgroundPositionY = ck.off.toFixed(0) + 'px';
+    $('#scen-l').style.backgroundPositionY = (ck.off * 0.8).toFixed(0) + 'px';
+    $('#scen-r').style.backgroundPositionY = (ck.off * 0.8 + 50).toFixed(0) + 'px';
+    $('#trip-fill').style.width = (ck.d * 100).toFixed(1) + '%';
+    $('#speed-fill').style.width = (ck.v * 100).toFixed(0) + '%';
+    const dest = $('#dest');
+    dest.style.left = (55 + ck.d * 20) + '%';
+    dest.style.transform = `translate(-50%, -100%) scale(${(0.18 + ck.d * ck.d * 1.5).toFixed(3)})`;
+    const showLight = !!ck.light && ck.d < STOP_D + 0.06;
+    tlight.hidden = !showLight;
+    if (showLight) {
+      const k = Math.min(1, ck.d / STOP_D);
+      tlight.className = 'tlight ' + ck.light;
+      tlight.style.left = (62 + k * 18) + '%';
+      tlight.style.transform = `translate(-50%, -100%) scale(${(0.3 + k * k * 1.2).toFixed(3)})`;
+    }
+  }
+  function arriveCockpit() {
+    stopCockpit();
+    sfx.thump();
+    if (lvl().fuel) state.fuel = Math.max(5, state.fuel - 35);
+    setBlink(null);
+    const done = ck.done;
+    if (done) done();
+  }
+  // Pedały działają, dopóki są wciśnięte (dotyk, mysz albo klawiatura).
+  function holdable(el, on, off) {
+    el.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      if (el.setPointerCapture) { try { el.setPointerCapture(e.pointerId); } catch (err) {} }
+      el.classList.add('down');
+      on();
+    });
+    const up = () => { el.classList.remove('down'); off(); };
+    ['pointerup', 'pointercancel', 'lostpointercapture'].forEach((t) => el.addEventListener(t, up));
+    el.addEventListener('contextmenu', (e) => e.preventDefault());
+    el.addEventListener('keydown', (e) => {
+      if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); el.classList.add('down'); on(); }
+    });
+    el.addEventListener('keyup', (e) => { if (e.key === ' ' || e.key === 'Enter') up(); });
+  }
+  holdable(gasBtn, () => { audio(); ck.gas = true; }, () => { ck.gas = false; });
+  holdable(brakeBtn, () => {
+    ck.brake = true;
+    if ((ck.light === 'red' || ck.light === 'yellow') && ck.d < STOP_D && !ck.praised) {
+      ck.praised = true;
+      say(null, 'Brawo, hamujesz przed światłami!');
+    }
+  }, () => { ck.brake = false; });
+  blinkR.addEventListener('click', () => {
+    const turnOn = !ck.blinkR;
+    setBlink(turnOn ? 'r' : null);
+    if (turnOn && ck.d >= 0.84) say(null, 'Super! Teraz gaz i skręcamy do domku.');
+  });
+  blinkL.addEventListener('click', () => {
+    const turnOn = !ck.blinkL;
+    setBlink(turnOn ? 'l' : null);
+    if (turnOn && ck.d >= 0.84) say(null, 'To jest w lewo. Domek jest po prawej stronie.');
+  });
+  $('#horn').addEventListener('click', (e) => { e.stopPropagation(); sfx.honk(); });
+  $('#wipers').addEventListener('click', () => {
+    ck.wipers = !ck.wipers;
+    $('#wipers').classList.toggle('on', ck.wipers);
+    $('#wiper').classList.toggle('on', ck.wipers);
+    rainEl.classList.toggle('cleared', ck.wipers);
+    if (ck.wipers) sfx.swish();
+  });
+  $('#lights').addEventListener('click', () => {
+    ck.lights = !ck.lights;
+    $('#lights').classList.toggle('on', ck.lights);
+    $('#beams').classList.toggle('on', ck.lights);
+    sfx.pop();
+  });
+
+  /* ---------- stacja paliw ---------- */
+  const nozzle = $('#nozzle');
+  const payBtn = $('#btn-pay');
+  let filling = false;
+  let added = 0;
+  function paintPump() {
+    $('#pump-fill').style.width = state.fuel + '%';
+    $('#pump-l').textContent = (added * 0.6).toFixed(1).replace('.', ',');
+  }
+  function enterFuel() {
+    show('s-fuel');
+    added = 0;
+    filling = false;
+    payBtn.hidden = true;
+    nozzle.disabled = false;
+    paintPump();
+    say('pump', LINE.pump);
+  }
+  holdable(nozzle, () => {
+    if (state.fuel >= 100 || nozzle.disabled) return;
+    audio();
+    filling = true;
+    const ep = epoch;
+    let t0 = performance.now();
+    let lastGlug = 0;
+    const loop = (now) => {
+      if (!filling || ep !== epoch) return;
+      const dt = Math.min(0.05, (now - t0) / 1000);
+      t0 = now;
+      const inc = Math.min(100 - state.fuel, dt * 30);
+      state.fuel += inc;
+      added += inc;
+      if (now - lastGlug > 260) { sfx.glug(); lastGlug = now; }
+      paintPump();
+      if (state.fuel >= 100) {
+        filling = false;
+        nozzle.disabled = true;
+        nozzle.classList.remove('down');
+        sfx.yay();
+        payBtn.hidden = false;
+        payBtn.classList.add('pulse');
+        say('full', LINE.full);
+        return;
+      }
+      requestAnimationFrame(loop);
+    };
+    requestAnimationFrame(loop);
+  }, () => { filling = false; });
+  payBtn.addEventListener('click', () => {
+    sfx.beep2();
+    payBtn.hidden = true;
+    enterMap('next', 'Zapłacone! Dokąd teraz jedziemy?');
   });
 
   /* ---------- start i przyciski ---------- */
@@ -1729,9 +2659,9 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     audio();
     sfx.honk();
     say('start', LINE.start);
-    newRound();
-    later(() => enterDepot(true), wait(900));
+    later(() => enterIntro(), wait(900));
   });
+  renderLevels();
 
   const soundBtn = $('#btn-sound');
   function paintSound() {
@@ -2126,9 +3056,22 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   function hintTarget() {
     switch (state.screen) {
       case 's-start': return $('#btn-start');
+      case 's-intro': return $('#btn-intro');
       case 's-depot': return goBtn.disabled ? $('#pkgs .pkg:not(.gone)') : goBtn;
-      case 's-map': return busy ? null : $('.house.pending .hit');
+      case 's-map': return busy ? null : lowFuel() ? $('#station .hit') : $('.house.pending .hit, .house.pickup .hit');
+      case 's-order':
+        if (ostep === 'ring') return phone;
+        if (ostep === 'shelf') return $(`.shelf-item[data-i="${orderItem().rid}"]`);
+        if (ostep === 'tape') return tapeBtn;
+        if (ostep === 'label') return printLabel.hidden ? printBtn : printLabel;
+        return null;
+      case 's-cockpit':
+        if (ck.d >= 0.84 && !ck.blinkR) return blinkR;
+        if (ck.light === 'red') return ck.v > 0.05 ? brakeBtn : null;
+        return gasBtn;
+      case 's-fuel': return payBtn.hidden ? nozzle : payBtn;
       case 's-door':
+        if (state.step === 'weigh') return weighed ? null : sendBox;
         if (state.step === 'bell') return ringing ? null : $('#bell-big');
         if (state.step === 'pick') return $(`#pick-row .pkg[data-rid="${state.current.rid}"]`);
         if (state.step === 'scan') return scanned ? null : scanBtn;
@@ -2164,6 +3107,9 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   const menu = $('#menu');
   const stageBtn = $('#btn-stage');
   const STAGES = {
+    's-order': 'Zamówienie: telefon dzwoni jeszcze raz.',
+    's-cockpit': 'Ta jazda: ruszasz od początku drogi.',
+    's-fuel': 'Tankowanie: zaczynasz od nowa przy dystrybutorze.',
     's-depot': 'Sortownia: paczki wracają na taśmę.',
     's-map': 'Trasa: paczki wracają do auta, auto staje przy sortowni.',
     's-door': 'Ta dostawa: drzwi znowu są zamknięte.',
@@ -2174,6 +3120,9 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     busy = false;
     stopVoices();
     stopEngine();
+    stopCockpit();
+    clearInterval(ringTimer);
+    filling = false;
     vanTd.classList.remove('driving');
     if (geom) state.vanLen = geom.start;
   }
@@ -2182,6 +3131,8 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     resetPlay();
     state.round = [];
     state.current = null;
+    useBoard(Math.max(0, lvl().board));
+    renderLevels();
     renderHUD();
     show('s-start');
     say(null, 'Tu baza. Kurierze Max, czekamy na Ciebie!', { silent: true });
@@ -2189,23 +3140,43 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   function restartStage() {
     const sc = state.screen;
     if (!STAGES[sc]) return;
+    if (sc === 's-order') {
+      epoch++;
+      stopVoices();
+      clearInterval(ringTimer);
+      enterOrder();
+      return;
+    }
+    if (sc === 's-cockpit') {
+      epoch++;
+      stopVoices();
+      enterCockpit(ck.target, ck.done);
+      return;
+    }
+    if (sc === 's-fuel') {
+      epoch++;
+      stopVoices();
+      enterFuel();
+      return;
+    }
     if (sc === 's-door') {
       // Auto zostaje pod domem, wraca tylko ta jedna dostawa.
       const p = state.current;
       epoch++;
       busy = false;
       stopVoices();
-      if (p.status === 'done') { p.status = 'van'; p.time = null; renderHUD(); }
+      if (p.status === 'done') { p.status = p.kind === 'pick' ? 'wait' : 'van'; p.time = null; renderHUD(); }
       enterDoor(p);
       return;
     }
     resetPlay();
+    state.fuel = 100;
     if (sc === 's-map') {
-      state.round.forEach((p) => { if (p.status === 'done') { p.status = 'van'; p.time = null; } });
+      state.round.forEach((p) => { if (p.status === 'done') { p.status = p.kind === 'pick' ? 'wait' : 'van'; p.time = null; } });
       renderHUD();
       enterMap('map', LINE.map);
     } else {
-      state.round.forEach((p) => { p.status = 'sort'; p.time = null; });
+      state.round.forEach((p) => { p.status = p.kind === 'pick' ? 'wait' : 'sort'; p.time = null; });
       renderHUD();
       enterDepot();
     }
@@ -2227,15 +3198,22 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   $('#btn-restart').addEventListener('click', () => { closeMenu(); restartGame(); });
 
   /* ---------- przywracanie po aktualizacji strony ---------- */
-  try { window.claude?.hot?.snapshot?.(() => ({ round: state.round, vanLen: state.vanLen })); } catch (e) {}
+  try {
+    window.claude?.hot?.snapshot?.(() => ({ round: state.round, vanLen: state.vanLen, level: state.level, board: state.board, fuel: state.fuel }));
+  } catch (e) {}
   function boot(data) {
     const d = data || {};
     if (Array.isArray(d.round) && d.round.length) {
+      if (typeof d.level === 'number' && LEVELS[d.level]) state.level = Math.min(d.level, progress);
+      useBoard(typeof d.board === 'number' && BOARDS[d.board] ? d.board : 0);
       state.round = d.round;
       state.vanLen = typeof d.vanLen === 'number' ? d.vanLen : null;
+      state.fuel = typeof d.fuel === 'number' ? d.fuel : 100;
+      renderLevels();
       renderHUD();
-      if (state.round.some((p) => p.status === 'sort')) enterDepot();
-      else if (state.round.some((p) => p.status === 'van')) enterMap('next', 'Dokąd teraz jedziemy?');
+      if (state.round.some((p) => p.status === 'order')) enterOrder();
+      else if (state.round.some((p) => p.status === 'sort')) enterDepot();
+      else if (pendingStops().length) enterMap('next', 'Dokąd teraz jedziemy?');
       else enterEnd();
       return;
     }
