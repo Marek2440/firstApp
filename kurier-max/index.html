@@ -58,6 +58,9 @@
   --wood: #8A5A33;
   --wood-light: #E7C79B;
   --sky-night: #2C3A63;
+  --sky-dusk: #E8875A;
+  --tunnel-roof: #3A3F52;
+  --tunnel-wall: #5A6075;
   --beam: rgba(255, 240, 180, .6);
   --drop: rgba(255, 255, 255, .75);
   --ok-soft: #DDF3E5;
@@ -699,13 +702,14 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
 .tape-roll { width: 64px; height: 64px; border-radius: 50%; background: var(--tape); border: 4px solid var(--ink); box-shadow: inset 0 0 0 14px var(--tape), inset 0 0 0 18px var(--box-deep); }
 .printer { position: relative; width: 84px; height: 56px; border-radius: 10px; background: var(--device); border: 4px solid var(--ink); }
 .printer::after { content: ""; position: absolute; left: 14px; right: 14px; top: 12px; height: 6px; border-radius: 3px; background: var(--ink); }
-.printer-wrap { position: relative; display: flex; flex-direction: column; align-items: center; }
+.printer-wrap { position: relative; display: flex; align-items: center; gap: 14px; }
 .print-label {
-  position: absolute; bottom: calc(100% + 8px); left: 50%; width: 110px; height: 72px; padding: 0;
+  order: 2; flex: none; width: 110px; height: 72px; padding: 0;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
   background: var(--paper); border: 3px solid var(--ink); border-radius: 6px; box-shadow: 0 4px 0 var(--ink); cursor: pointer;
-  transform: translateX(-50%); font-family: var(--f-emoji); font-size: 30px; line-height: 1;
+  font-family: var(--f-emoji); font-size: 30px; line-height: 1;
 }
+.print-label[hidden] { display: flex !important; visibility: hidden; }
 .print-label.out { animation: printout .6s ease-out; }
 .print-label .pl-bar { width: 100%; height: 8px; margin-top: -10px; }
 .print-label .pl-no { font-family: var(--f-lcd); font-size: 15px; }
@@ -715,6 +719,12 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
 #s-cockpit { display: grid; grid-template-rows: 1fr auto; }
 .wind { position: relative; overflow: hidden; background: linear-gradient(var(--sky) 0 46%, var(--grass) 46%); border-bottom: 6px solid var(--ink); }
 #s-cockpit.night .wind { background: linear-gradient(var(--sky-night) 0 46%, var(--grass) 46%); }
+#s-cockpit.dusk .wind { background: linear-gradient(var(--sky-night), var(--sky-dusk) 46%, var(--grass) 46%); }
+#s-cockpit.tunnel .wind { background: linear-gradient(var(--tunnel-roof) 0 46%, var(--tunnel-wall) 46%); }
+#s-cockpit.tunnel .scenery { background: radial-gradient(circle at 50% 30%, var(--sun) 0 9px, transparent 10px) 0 0 / 100% 110px repeat-y; }
+.dark-veil { position: absolute; inset: 0; background: var(--sky-night); opacity: 0; transition: opacity .4s; pointer-events: none; }
+#s-cockpit.dark .dark-veil { opacity: .45; }
+#s-cockpit.dark.lit .dark-veil { opacity: .12; }
 .road3d { position: absolute; left: 50%; bottom: 0; width: 140%; height: 54%; transform: translateX(-50%); background: var(--road); clip-path: polygon(47% 0, 53% 0, 100% 100%, 0 100%); }
 .lane { position: absolute; left: 48.5%; width: 3%; top: 0; bottom: 0; background: repeating-linear-gradient(to bottom, var(--paper) 0 34px, transparent 34px 80px); clip-path: polygon(45% 0, 55% 0, 100% 100%, 0 100%); }
 .scenery { position: absolute; top: 46%; bottom: 0; width: 22%; background: radial-gradient(circle at 50% 50%, var(--tree) 0 20px, transparent 21px) 0 0 / 100% 110px repeat-y; }
@@ -814,6 +824,12 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
 #station:focus-visible .hit { stroke: var(--plate); stroke-width: 5; stroke-dasharray: 10 6; }
 #station .halo { fill: var(--sun); opacity: 0; }
 #map.low-fuel #station .halo { transform-box: fill-box; transform-origin: center; animation: halo 1.2s ease-in-out infinite; }
+/* Przy pustym baku stacja rośnie, a nad nią skacze strzałka, żeby nie zginęła w pętli drogi. */
+#station .st-art { transform-box: fill-box; transform-origin: 50% 100%; transition: transform .35s ease; }
+#map.low-fuel #station .st-art { transform: scale(1.45); }
+#station .st-arrow { display: none; }
+#map.low-fuel #station .st-arrow { display: inline; animation: bob .8s ease-in-out infinite; }
+.st-arr { fill: var(--sun); stroke: var(--ink); stroke-width: 4; stroke-linejoin: round; }
 .st-roof { fill: var(--brake); stroke: var(--ink); stroke-width: 3; }
 .st-pole { fill: var(--curb); stroke: var(--ink); stroke-width: 2; }
 .st-pump { fill: var(--ok); stroke: var(--ink); stroke-width: 3; }
@@ -828,7 +844,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
 .track li.call { border-color: var(--sun); }
 
 @keyframes away { to { transform: translateX(120vw) rotate(8deg); } }
-@keyframes printout { from { transform: translate(-50%, 60px) scaleY(.2); opacity: 0; } to { transform: translateX(-50%); opacity: 1; } }
+@keyframes printout { from { transform: translateX(-70px) scaleX(.2); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes rainfall { to { background-position: 0 60px, 23px 120px; } }
 @keyframes wipe { from { transform: rotate(-72deg); } to { transform: rotate(72deg); } }
 @keyframes blinkbg { 50% { background: var(--sun); } }
@@ -1066,14 +1082,17 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
         </g>
         <g id="trees"></g>
         <g id="station" transform="translate(505 600)" role="button" tabindex="0" aria-label="Stacja paliw">
-          <circle class="halo" r="64"/>
-          <rect class="hit" x="-62" y="-62" width="124" height="112" rx="18"/>
-          <rect class="st-pole" x="-46" y="-34" width="8" height="62"/>
-          <rect class="st-pole" x="38" y="-34" width="8" height="62"/>
-          <rect class="st-roof" x="-56" y="-52" width="112" height="20" rx="4"/>
-          <text class="st-t" x="0" y="-37" text-anchor="middle">PALIWO</text>
-          <rect class="st-pump" x="-14" y="-18" width="28" height="46" rx="4"/>
-          <rect class="st-screen" x="-9" y="-12" width="18" height="10" rx="2"/>
+          <circle class="halo" r="84"/>
+          <rect class="hit" x="-84" y="-150" width="168" height="200" rx="18"/>
+          <g class="st-art">
+            <rect class="st-pole" x="-46" y="-34" width="8" height="62"/>
+            <rect class="st-pole" x="38" y="-34" width="8" height="62"/>
+            <rect class="st-roof" x="-56" y="-52" width="112" height="20" rx="4"/>
+            <text class="st-t" x="0" y="-37" text-anchor="middle">PALIWO</text>
+            <rect class="st-pump" x="-14" y="-18" width="28" height="46" rx="4"/>
+            <rect class="st-screen" x="-9" y="-12" width="18" height="10" rx="2"/>
+          </g>
+          <g class="st-arrow"><path class="st-arr" d="M-18 -140H18V-116H34L0 -88L-34 -116H-18Z"/></g>
         </g>
         <g id="houses"></g>
         <g id="van" transform="translate(400 735)" role="button" aria-label="Auto kuriera, klakson">
@@ -1213,6 +1232,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
       <div class="wind">
         <div class="scenery l" id="scen-l"></div><div class="scenery r" id="scen-r"></div>
         <div class="road3d"><div class="lane" id="lane"></div></div>
+        <div class="dark-veil"></div>
         <div class="beams" id="beams"></div>
         <div class="dest" id="dest"></div>
         <div class="tlight" id="tlight" hidden><div class="tl-box"><span class="tl r"></span><span class="tl y"></span><span class="tl g"></span></div><div class="tl-pole"></div></div>
@@ -1373,7 +1393,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   const $ = (s) => document.querySelector(s);
   const wait = (ms) => (reduce ? Math.min(ms, 120) : ms);
 
-  const state = { round: [], vanLen: null, current: null, step: null, screen: 's-start', level: 0, board: 0, fuel: 100 };
+  const state = { round: [], vanLen: null, current: null, step: null, screen: 's-start', level: 0, board: 0, fuel: 100, refuels: 0 };
   let busy = false;
   // Najdalsza odblokowana trasa (na tym urządzeniu).
   let progress = 0;
@@ -1403,7 +1423,9 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   // Ile rund z rzędu na trasie z odbiorami wypadło bez odbioru; po dwóch trzecia ma odbiór na pewno.
   let noPick = 0;
   try { noPick = parseInt(localStorage.getItem('kurier-max-nopick'), 10) || 0; } catch (e) {}
-  const lowFuel = () => !!lvl().fuel && state.fuel < 35 && pendingStops().length > 0;
+  // Brak paliwa blokuje dalszą jazdę. Powrót do sortowni też jest kursem, więc przy jednej paczce
+  // tankujemy przed powrotem; po pierwszym tankowaniu na sam powrót paliwa już wystarcza.
+  const lowFuel = () => !!lvl().fuel && state.fuel < 35 && (pendingStops().length > 0 || state.refuels === 0);
   // Każdy restart podbija `epoch`, więc odłożone kroki poprzedniej rozgrywki już się nie wykonają.
   let epoch = 0;
   function later(fn, ms) {
@@ -1587,10 +1609,13 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     { id: 'gas', t: 'Trzymaj gaz, żeby jechać.' },
     { id: 'red', t: 'Czerwone światło! Hamuj!' },
     { id: 'green', t: 'Zielone! Gaz!' },
-    { id: 'blink', t: 'Domek jest po prawej. Włącz kierunkowskaz w prawo!' },
+    { id: 'blinkR', t: 'Domek jest po prawej. Włącz kierunkowskaz w prawo!' },
+    { id: 'blinkL', t: 'Domek jest po lewej. Włącz kierunkowskaz w lewo!' },
     { id: 'rain', t: 'Pada! Włącz wycieraczki.' },
     { id: 'lights', t: 'Robi się ciemno. Włącz światła.' },
+    { id: 'tunnel', t: 'Wjeżdżamy do tunelu. Włącz światła!' },
     { id: 'fuel', t: 'Mało paliwa! Jedziemy na stację.' },
+    { id: 'station', t: 'Stacja paliw świeci na mapie, pod żółtą strzałką. Stuknij ją!' },
     { id: 'pump', t: 'Przytrzymaj pistolet, żeby zatankować.' },
     { id: 'full', t: 'Pełny bak! Teraz zapłać kartą.' },
     { id: 'pickup', t: 'Ten zwierzak chce nadać paczkę. Połóż ją na wadze.' },
@@ -1598,6 +1623,8 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     { id: 'call', t: 'Dzwoni telefon w aucie! Ktoś chce zamówić paczkę. Wracamy do sortowni.' },
   ];
   const LINE = Object.fromEntries(LINES.map((l) => [l.id, l.t]));
+  // Stare nagranie 'blink' było zdaniem o skręcie w prawo.
+  const LEGACY = { blink: 'blinkR' };
   const RATE = 16000;
   const MAX_SEC = 11;
   const clips = {};    // id zdania -> Float32Array, mono 16 kHz
@@ -1793,6 +1820,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     // Paczki z sortowni i odbiory na pasku w losowej kolejności.
     state.round = shuffle(state.round);
     state.fuel = 100;
+    state.refuels = 0;
     state.current = null;
     if (geom) state.vanLen = geom.start;
     renderHUD();
@@ -1992,6 +2020,13 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     mapSvg.classList.toggle('low-fuel', lowFuel());
     placeVan(state.vanLen);
     say(id, text, { queue });
+    if (lowFuel()) pointStation();
+  }
+  // Lektor wskazuje stację, a rączka pojawia się nad nią od razu, nie dopiero po bezczynności.
+  function pointStation() {
+    say('station', LINE.station, { queue: true, keepStrip: true });
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(showHint, 3500);
   }
 
   function onHouse(i, g) {
@@ -2011,6 +2046,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     if (lowFuel()) {
       sfx.oops();
       say('fuel', 'Mało paliwa! Najpierw jedziemy na stację. Stuknij stację z napisem paliwo.');
+      pointStation();
       return;
     }
     busy = true;
@@ -2248,14 +2284,17 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     const call = callDue();
     if (call) { phoneInVan(call); return; }
     const left = pendingStops().length;
-    if (left && lowFuel()) { enterMap('fuel', LINE.fuel); return; }
+    if (lowFuel()) { enterMap('fuel', LINE.fuel); return; }
     if (left) { enterMap('next', LEFT_MSG[left] || 'Dokąd teraz jedziemy?'); return; }
+    goHome();
+  });
+  function goHome() {
     enterMap('back', LINE.back);
     busy = true;
     later(() => drive(geom.start, () => {
       later(() => { busy = false; enterEnd(); }, wait(500));
     }), wait(1400));
-  });
+  }
 
   /* ---------- koniec trasy ---------- */
   const confettiCv = $('#confetti');
@@ -2528,7 +2567,17 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   const rainEl = $('#rain');
   const STOP_D = 0.45;      // linia zatrzymania przed światłami
   const TRIP_SPEED = 0.2;   // pełna trasa w 5 s przy pełnym gazie
+  const lightsBtn = $('#lights');
   const ck = { raf: 0, eng: null, blinkTimer: 0 };
+  const TURN_D = 0.84;      // od tego miejsca trzeba mrugać w stronę domku
+  // Ciemno jest w nocy, a na innych planszach czasem o zmierzchu albo w tunelu.
+  function pickDark(night) {
+    if (night) return 'night';
+    const x = Math.random();
+    return x < 0.15 ? 'dusk' : x < 0.3 ? 'tunnel' : null;
+  }
+  const blinkOk = () => (ck.side === 'l' ? ck.blinkL : ck.blinkR);
+  const needLights = () => !!ck.dark && !ck.lights;
   function engineLoop() {
     const a = audio();
     if (!a || !soundOn) return null;
@@ -2572,16 +2621,19 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   function enterCockpit(i, onArrive) {
     stopCockpit();
     const r = R[i];
-    const night = !!BOARDS[state.board].night;
+    const dark = pickDark(!!BOARDS[state.board].night);
     Object.assign(ck, {
       target: i, done: onArrive, v: 0, d: 0, off: 0, stopT: 0, praised: false, asked: {},
       light: Math.random() < 0.8 || !state.sawLight ? 'green' : null, lightDone: false,
-      rain: Math.random() < 0.45, wipers: false, lights: false,
+      rain: dark !== 'tunnel' && Math.random() < 0.45, wipers: false, lights: false,
+      side: Math.random() < 0.5 ? 'l' : 'r', dark, nagAt: 0,
     });
     state.sawLight = true;
     setBlink(null);
     show('s-cockpit');
-    cockpit.classList.toggle('night', night);
+    ['night', 'dusk', 'tunnel'].forEach((c) => cockpit.classList.toggle(c, dark === c));
+    cockpit.classList.toggle('dark', !!dark);
+    cockpit.classList.remove('lit');
     $('#dest').innerHTML = miniHouse(r);
     $('#trip-end').textContent = r.ani;
     rainEl.hidden = !ck.rain;
@@ -2590,12 +2642,13 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     $('#wiper').classList.remove('on');
     $('#wipers').classList.remove('on');
     $('#beams').classList.remove('on');
-    $('#lights').classList.remove('on');
+    lightsBtn.classList.remove('on');
     $('#fuel-gauge').classList.toggle('low', state.fuel < 35);
     $('#fuel-fill').style.width = state.fuel + '%';
     ck.eng = engineLoop();
-    say('gas', LINE.gas, { queue: true });
-    if (night) later(() => ask('lights'), wait(2600));
+    // Po ciemku auto rusza dopiero ze światłami, więc najpierw prośba o światła.
+    if (dark) ask('lights');
+    else say('gas', LINE.gas, { queue: true });
     if (ck.rain) later(() => ask('rain'), wait(4200));
     paintCockpit();
     const ep = epoch;
@@ -2614,10 +2667,12 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     if (key === 'lights' && ck.lights) return;
     if (key === 'rain' && ck.wipers) return;
     ck.asked[key] = true;
+    if (key === 'lights' && ck.dark === 'tunnel') key = 'tunnel';
     say(key, LINE[key], { queue: key !== 'red' });
   }
   function stepCockpit(dt) {
-    ck.v += (ck.gas ? 0.9 : -0.5) * dt;
+    ck.v += (ck.gas && !needLights() ? 0.9 : -0.5) * dt;
+    if (needLights()) ck.v = Math.min(ck.v, 0);
     if (ck.brake) ck.v -= 2.6 * dt;
     ck.v = Math.max(0, Math.min(1, ck.v));
     let d = ck.d + ck.v * dt * TRIP_SPEED;
@@ -2633,9 +2688,9 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
         if (ck.stopT > 1.6) { ck.light = 'green'; ck.lightDone = true; say('green', LINE.green); }
       }
     }
-    // Skręt do domku dopiero z włączonym kierunkowskazem w prawo.
-    if (d >= 0.84 && !ck.blinkR) {
-      ask('blink');
+    // Skręt do domku dopiero z kierunkowskazem w jego stronę.
+    if (d >= TURN_D && !blinkOk()) {
+      ask(ck.side === 'l' ? 'blinkL' : 'blinkR');
       if (d >= 0.9) { d = 0.9; ck.v = 0; }
     }
     ck.d = Math.min(1, d);
@@ -2651,7 +2706,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     $('#trip-fill').style.width = (ck.d * 100).toFixed(1) + '%';
     $('#speed-fill').style.width = (ck.v * 100).toFixed(0) + '%';
     const dest = $('#dest');
-    dest.style.left = (55 + ck.d * 20) + '%';
+    dest.style.left = (ck.side === 'l' ? 45 - ck.d * 20 : 55 + ck.d * 20) + '%';
     dest.style.transform = `translate(-50%, -100%) scale(${(0.18 + ck.d * ck.d * 1.5).toFixed(3)})`;
     const showLight = !!ck.light && ck.d < STOP_D + 0.06;
     tlight.hidden = !showLight;
@@ -2666,8 +2721,9 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     stopCockpit();
     sfx.thump();
     if (lvl().fuel) {
-      const stops = state.round.length;
-      state.fuel = Math.max(5, state.fuel - (stops >= 2 ? Math.min(70, Math.max(35, 70 / (stops - 1))) : 35));
+      // Po połowie kursów (w górę) bak spada do 34 %, poniżej progu 35 %: tankowanie jest na każdej trasie.
+      const half = Math.ceil(state.round.length / 2);
+      state.fuel = Math.max(5, state.fuel - 66 / half);
     }
     setBlink(null);
     const done = ck.done;
@@ -2689,7 +2745,16 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     });
     el.addEventListener('keyup', (e) => { if (e.key === ' ' || e.key === 'Enter') up(); });
   }
-  holdable(gasBtn, () => { audio(); ck.gas = true; }, () => { ck.gas = false; });
+  holdable(gasBtn, () => {
+    audio();
+    ck.gas = true;
+    // Gaz po ciemku bez świateł: łagodne przypomnienie, najwyżej co 4 sekundy.
+    const now = performance.now();
+    if (needLights() && now - ck.nagAt > 4000 && !voiceBusy()) {
+      ck.nagAt = now;
+      say(ck.dark === 'tunnel' ? 'tunnel' : 'lights', ck.dark === 'tunnel' ? LINE.tunnel : LINE.lights);
+    }
+  }, () => { ck.gas = false; });
   holdable(brakeBtn, () => {
     ck.brake = true;
     if ((ck.light === 'red' || ck.light === 'yellow') && ck.d < STOP_D && !ck.praised) {
@@ -2697,16 +2762,15 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
       say(null, 'Brawo, hamujesz przed światłami!');
     }
   }, () => { ck.brake = false; });
-  blinkR.addEventListener('click', () => {
-    const turnOn = !ck.blinkR;
-    setBlink(turnOn ? 'r' : null);
-    if (turnOn && ck.d >= 0.84) say(null, 'Super! Teraz gaz i skręcamy do domku.');
-  });
-  blinkL.addEventListener('click', () => {
-    const turnOn = !ck.blinkL;
-    setBlink(turnOn ? 'l' : null);
-    if (turnOn && ck.d >= 0.84) say(null, 'To jest w lewo. Domek jest po prawej stronie.');
-  });
+  function onBlink(dir) {
+    const turnOn = dir === 'l' ? !ck.blinkL : !ck.blinkR;
+    setBlink(turnOn ? dir : null);
+    if (!turnOn || ck.d < TURN_D) return;
+    if (dir === ck.side) say(null, 'Super! Teraz gaz i skręcamy do domku.');
+    else say(null, dir === 'l' ? 'To jest w lewo. Domek jest po prawej stronie.' : 'To jest w prawo. Domek jest po lewej stronie.');
+  }
+  blinkR.addEventListener('click', () => onBlink('r'));
+  blinkL.addEventListener('click', () => onBlink('l'));
   $('#horn').addEventListener('click', (e) => { e.stopPropagation(); sfx.honk(); });
   $('#wipers').addEventListener('click', () => {
     ck.wipers = !ck.wipers;
@@ -2715,11 +2779,17 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     rainEl.classList.toggle('cleared', ck.wipers);
     if (ck.wipers) sfx.swish();
   });
-  $('#lights').addEventListener('click', () => {
+  lightsBtn.addEventListener('click', () => {
     ck.lights = !ck.lights;
-    $('#lights').classList.toggle('on', ck.lights);
+    lightsBtn.classList.toggle('on', ck.lights);
     $('#beams').classList.toggle('on', ck.lights);
+    cockpit.classList.toggle('lit', ck.lights);
     sfx.pop();
+    if (ck.dark && ck.lights && !ck.asked.lit) {
+      ck.asked.lit = true;
+      say(null, 'Brawo, światła świecą!');
+      say('gas', LINE.gas, { queue: true });
+    }
   });
 
   /* ---------- stacja paliw ---------- */
@@ -2773,7 +2843,9 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   payBtn.addEventListener('click', () => {
     sfx.beep2();
     payBtn.hidden = true;
-    enterMap('next', 'Zapłacone! Dokąd teraz jedziemy?');
+    state.refuels++;
+    if (pendingStops().length) enterMap('next', 'Zapłacone! Dokąd teraz jedziemy?');
+    else goHome();
   });
 
   /* ---------- start i przyciski ---------- */
@@ -2872,16 +2944,19 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
       store = 'db';
       try {
         const snap = await dbApi.collection('voice').get();
+        const own = new Set(snap.docs.map((doc) => doc.id));
         snap.docs.forEach((doc) => {
-          const pcm = LINE[doc.id] ? unpackClip(doc.data()) : null;
-          if (pcm) { clips[doc.id] = pcm; delete bufCache[doc.id]; }
+          const id = LEGACY[doc.id] && !own.has(LEGACY[doc.id]) ? LEGACY[doc.id] : doc.id;
+          const pcm = LINE[id] ? unpackClip(doc.data()) : null;
+          if (pcm) { clips[id] = pcm; delete bufCache[id]; }
         });
       } catch (e) {}
     } else {
       store = 'local';
       LINES.forEach((l) => {
         try {
-          const raw = localStorage.getItem('kurier-max-voice-' + l.id);
+          const old = Object.keys(LEGACY).find((k) => LEGACY[k] === l.id);
+          const raw = localStorage.getItem('kurier-max-voice-' + l.id) || (old && localStorage.getItem('kurier-max-voice-' + old));
           const pcm = raw ? unpackClip(JSON.parse(raw)) : null;
           if (pcm) clips[l.id] = pcm;
         } catch (e) {}
@@ -2900,8 +2975,10 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   async function dropClip(id) {
     delete clips[id];
     delete bufCache[id];
-    if (store === 'db') await dbApi.doc('voice/' + id).delete();
-    else if (store === 'local') { try { localStorage.removeItem('kurier-max-voice-' + id); } catch (e) {} }
+    for (const k of [id, ...Object.keys(LEGACY).filter((k) => LEGACY[k] === id)]) {
+      if (store === 'db') await dbApi.doc('voice/' + k).delete();
+      else if (store === 'local') { try { localStorage.removeItem('kurier-max-voice-' + k); } catch (e) {} }
+    }
   }
 
   // Plik z dyktafonu lub film -> mono 16 kHz.
@@ -3204,7 +3281,8 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
         if (ostep === 'label') return printLabel.hidden ? printBtn : printLabel;
         return null;
       case 's-cockpit':
-        if (ck.d >= 0.84 && !ck.blinkR) return blinkR;
+        if (needLights()) return lightsBtn;
+        if (ck.d >= TURN_D && !blinkOk()) return ck.side === 'l' ? blinkL : blinkR;
         if (ck.light === 'red') return ck.v > 0.05 ? brakeBtn : null;
         return gasBtn;
       case 's-fuel': return payBtn.hidden ? nozzle : payBtn;
@@ -3309,6 +3387,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     }
     resetPlay();
     state.fuel = 100;
+    state.refuels = 0;
     if (sc === 's-map') {
       state.round.forEach((p) => { if (p.status === 'done') { p.status = p.kind === 'pick' ? 'wait' : 'van'; p.time = null; } });
       renderHUD();
@@ -3343,7 +3422,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
 
   /* ---------- przywracanie po aktualizacji strony ---------- */
   try {
-    window.claude?.hot?.snapshot?.(() => ({ round: state.round, vanLen: state.vanLen, level: state.level, board: state.board, fuel: state.fuel }));
+    window.claude?.hot?.snapshot?.(() => ({ round: state.round, vanLen: state.vanLen, level: state.level, board: state.board, fuel: state.fuel, refuels: state.refuels }));
   } catch (e) {}
   function boot(data) {
     const d = data || {};
@@ -3353,12 +3432,13 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
       state.round = d.round;
       state.vanLen = typeof d.vanLen === 'number' ? d.vanLen : null;
       state.fuel = typeof d.fuel === 'number' ? d.fuel : 100;
+      state.refuels = typeof d.refuels === 'number' ? d.refuels : 0;
       renderLevels();
       renderHUD();
       if (state.round.some((p) => p.status === 'order')) enterOrder();
       else if (state.round.some((p) => p.status === 'sort')) enterDepot();
       else if (callDue()) { state.vanLen = geom ? geom.start : null; callDue().status = 'order'; enterOrder(); }
-      else if (pendingStops().length) enterMap('next', 'Dokąd teraz jedziemy?');
+      else if (pendingStops().length || lowFuel()) enterMap('next', 'Dokąd teraz jedziemy?');
       else enterEnd();
       return;
     }
