@@ -1395,9 +1395,15 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
       if (!C) return null;
       try { ac = new C(); } catch (e) { return null; }
     }
-    if (ac.state === 'suspended') ac.resume().catch(() => {});
+    // Safari na iPadzie potrafi zostawić kontekst jako 'interrupted' (np. po mikrofonie).
+    if (ac.state !== 'running' && ac.state !== 'closed') ac.resume().catch(() => {});
     return ac;
   }
+  // iPad: 'playback' gra mimo trybu cichego; do nagrywania potrzebny jest 'play-and-record'.
+  function setSession(type) {
+    try { if (navigator.audioSession) navigator.audioSession.type = type; } catch (e) {}
+  }
+  setSession('playback');
   function tone(freq, start, dur, type, vol) {
     const a = audio();
     if (!a || !soundOn) return;
@@ -1605,34 +1611,50 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     } catch (e) { return null; }
   }
 
-  function clipBuffer(id) {
-    const a = audio();
-    const src = clips[id];
-    if (!a || !src) return null;
-    if (bufCache[id] && bufCache[id].sampleRate === a.sampleRate) return bufCache[id];
-    const ratio = a.sampleRate / RATE;
-    const n = Math.max(1, Math.floor(src.length * ratio));
-    const b = a.createBuffer(1, n, a.sampleRate);
-    const out = b.getChannelData(0);
-    for (let i = 0; i < n; i++) {
-      const p = i / ratio, k = Math.floor(p), f = p - k;
-      const s0 = src[k] || 0, s1 = k + 1 < src.length ? src[k + 1] : s0;
-      out[i] = s0 + (s1 - s0) * f;
-    }
-    return (bufCache[id] = b);
+  // Nagrania grają przez zwykły odtwarzacz <audio> z plikiem WAV: na iPadzie działa pewniej niż
+  // Web Audio po użyciu mikrofonu i nie wycisza go tryb cichy.
+  function wavUrl(pcm) {
+    const n = pcm.length;
+    const buf = new ArrayBuffer(44 + n * 2);
+    const v = new DataView(buf);
+    const str = (o, t) => { for (let i = 0; i < t.length; i++) v.setUint8(o + i, t.charCodeAt(i)); };
+    str(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); str(8, 'WAVE'); str(12, 'fmt ');
+    v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+    v.setUint32(24, RATE, true); v.setUint32(28, RATE * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+    str(36, 'data'); v.setUint32(40, n * 2, true);
+    for (let i = 0; i < n; i++) v.setInt16(44 + i * 2, Math.max(-1, Math.min(1, pcm[i])) * 32767, true);
+    return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
   }
+  function clipUrl(id) {
+    if (!clips[id]) return null;
+    if (!bufCache[id]) bufCache[id] = wavUrl(clips[id]);
+    return bufCache[id];
+  }
+  const narrEl = new Audio();
+  narrEl.preload = 'auto';
+  narrEl.setAttribute('playsinline', '');
+  let narrUnlocked = false;
+  // Pierwsze dotknięcie odblokowuje odtwarzacz, żeby później mógł grać sam, bez kolejnego stuknięcia.
+  document.addEventListener('pointerdown', () => {
+    if (narrUnlocked) return;
+    narrUnlocked = true;
+    narrEl.src = wavUrl(new Float32Array(800));
+    const p = narrEl.play();
+    if (p && p.then) p.then(() => narrEl.pause()).catch(() => { narrUnlocked = false; });
+  }, true);
   function playClip(id, queue) {
     schedule(queue, () => {
       if (!soundOn) return;
-      const a = audio();
-      const b = clipBuffer(id);
-      if (!a || !b) return;
-      const s = a.createBufferSource();
-      s.buffer = b;
-      s.connect(a.destination);
-      s.onended = () => { if (narrSrc === s) narrSrc = null; };
-      narrSrc = s;
-      s.start();
+      const url = clipUrl(id);
+      if (!url) return;
+      const h = { stop() { narrEl.pause(); } };
+      narrSrc = h;
+      narrEl.onended = () => { if (narrSrc === h) narrSrc = null; };
+      narrEl.onerror = narrEl.onended;
+      narrEl.src = url;
+      narrEl.currentTime = 0;
+      const p = narrEl.play();
+      if (p && p.catch) p.catch(() => { if (narrSrc === h) narrSrc = null; });
     });
   }
 
@@ -2720,7 +2742,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
       const on = rec && rec.id === l.id;
       return `<li class="ln${has ? ' has' : ''}${l.id === nextId && !rec ? ' next' : ''}" data-id="${l.id}">` +
         `<span class="ln-num">${i + 1}</span>` +
-        `<span class="ln-body"><span class="ln-text">${l.t}</span><span class="ln-chip">${on ? 'Nagrywam…' : has ? 'Twój głos' : 'Głos komputera'}</span></span>` +
+        `<span class="ln-body"><span class="ln-text">${l.t}</span><span class="ln-chip">${on ? 'Nagrywam…' : has ? `Twój głos · ${(clips[l.id].length / RATE).toFixed(1).replace('.', ',')} s` : 'Głos komputera'}</span></span>` +
         `<span class="ln-act">` +
           (micOk ? `<button class="mini rec${on ? ' on' : ''}" type="button" data-act="rec" aria-label="${on ? 'Zakończ nagrywanie' : 'Nagraj zdanie ' + (i + 1)}">${on ? ICON_STOP : ICON_MIC}</button>` : '') +
           `<button class="mini" type="button" data-act="play" aria-label="Odsłuchaj zdanie ${i + 1}">${ICON_PLAY}</button>` +
@@ -2929,16 +2951,23 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   /* ---------- nagrywanie mikrofonem (działa poza ramką claude.ai, np. na GitHub Pages) ---------- */
   let micOk = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) && window.self === window.top;
   let rec = null;
+  let starting = false;
   let nextId = null;
   async function startRec(id) {
     if (working || rec) return;
-    const a = audio();
-    if (!a) { status(errText({ name: 'NoAudio' }), 'warn'); return; }
+    const C = window.AudioContext || window.webkitAudioContext;
+    if (!C) { status(errText({ name: 'NoAudio' }), 'warn'); return; }
+    if (starting) return;
+    starting = true;
     stopVoices();
+    setSession('play-and-record');
+    const a = audio();
     let stream;
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
     } catch (e) {
+      starting = false;
+      setSession('playback');
       if (e && e.name === 'NotAllowedError') status('Gra nie dostała zgody na mikrofon. Zezwól na mikrofon w ustawieniach przeglądarki albo wgraj plik.', 'warn');
       else { micOk = false; status('Mikrofon jest tu niedostępny. Wgraj nagranie z pliku.', 'warn'); }
       paintMic();
@@ -2954,10 +2983,15 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     src.connect(proc);
     proc.connect(sink);
     sink.connect(a.destination);
+    starting = false;
     rec = { id, chunks, sr: a.sampleRate, stream, src, proc, sink, t0: performance.now() };
     const tick = () => {
       const sec = (performance.now() - rec.t0) / 1000;
-      status(`Nagrywam… ${Math.floor(sec)} s. Przeczytaj zdanie i stuknij Stop.`, 'recording');
+      const c = rec.chunks[rec.chunks.length - 1];
+      let lvl = 0;
+      if (c) { for (let i = 0; i < c.length; i += 8) lvl = Math.max(lvl, Math.abs(c[i])); }
+      const bars = '▮'.repeat(Math.min(10, Math.round(lvl * 20))).padEnd(10, '▯');
+      status(`Nagrywam… ${Math.floor(sec)} s  ${bars}  Przeczytaj zdanie i stuknij Stop.`, 'recording');
       if (sec >= MAX_SEC) stopRec();
     };
     rec.timer = setInterval(tick, 250);
@@ -2971,6 +3005,8 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     clearInterval(r.timer);
     try { r.proc.disconnect(); r.src.disconnect(); r.sink.disconnect(); } catch (e) {}
     r.stream.getTracks().forEach((t) => t.stop());
+    setSession('playback');
+    audio();
     const len = r.chunks.reduce((s, c) => s + c.length, 0);
     const all = new Float32Array(len);
     let o = 0;
