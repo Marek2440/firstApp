@@ -514,7 +514,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
 }
 .pick-row { --pkg: clamp(70px, min(20vw, 15vh), 124px); display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; }
 .scan-row { display: flex; align-items: center; gap: 16px; }
-.held .pkg { pointer-events: none; }
+.held .pkg { cursor: pointer; }
 .scanner {
   position: relative; width: clamp(176px, 46vw, 236px);
   display: flex; flex-direction: column; gap: 10px; padding: 12px 12px 14px;
@@ -615,6 +615,20 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   font-size: 16px; line-height: 1.35;
 }
 .studio-steps li::marker { font-weight: 900; }
+.studio-steps p { margin: 0; }
+.mic-off { margin: 0; background: var(--warn-soft); }
+.mini.rec { background: var(--brake); color: var(--paper); }
+.mini.rec.on { animation: pulse 1s ease-in-out infinite; }
+.ln.next { background: var(--ok-soft); }
+.ln.next .mini.rec { animation: pulse 1.2s ease-in-out infinite; }
+.studio-status.recording { background: var(--warn-soft); }
+.hand {
+  position: fixed; z-index: 80; pointer-events: none; line-height: 1;
+  font-family: var(--f-emoji); font-size: 56px;
+  filter: drop-shadow(0 3px 0 var(--paper));
+  animation: tap 1s ease-in-out infinite;
+}
+@keyframes tap { 0%, 100% { transform: translate(-35%, 12px); } 50% { transform: translate(-35%, 0) scale(.9); } }
 .studio-formats { margin: -4px 0 0; text-align: center; font-size: 15px; color: var(--muted); }
 .cta-file { position: relative; align-self: center; display: inline-flex; align-items: center; }
 .cta-file:focus-within { outline: 4px solid var(--plate); outline-offset: 3px; }
@@ -872,7 +886,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
         </div>
         <div class="step" id="st-reveal" hidden>
           <div class="gift" id="gift"><span class="gift-item" id="gift-item"></span><div class="gift-body"></div><div class="gift-lid"></div></div>
-          <button class="cta" id="btn-back" type="button">Wracam do auta</button>
+          <button class="cta pulse" id="btn-back" type="button">Wracam do auta</button>
         </div>
       </div>
     </section>
@@ -899,9 +913,13 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
       <div class="studio">
         <h2>Twój głos w grze</h2>
         <p class="studio-lede">Max usłyszy Ciebie zamiast głosu komputera. Zwierzaki dalej mówią swoimi głosami.</p>
+        <div class="studio-steps" id="mic-steps">
+          <p><b>Najprościej:</b> stuknij czerwony mikrofon przy zdaniu, przeczytaj je i stuknij Stop. Gra od razu odtworzy nagranie i przejdzie do następnego zdania.</p>
+        </div>
+        <p class="studio-steps mic-off" id="mic-off" hidden>Nagrywanie mikrofonem działa w wersji gry na iPada. Tutaj wgraj gotowe nagranie z telefonu.</p>
         <ol class="studio-steps">
-          <li>Włącz w telefonie Dyktafon albo nagrywanie filmu.</li>
-          <li>Przeczytaj na głos zdania z listy poniżej, po kolei. Po każdym zrób 2 sekundy ciszy.</li>
+          <li>Albo nagraj wszystko naraz: włącz w telefonie Dyktafon albo nagrywanie filmu.</li>
+          <li>Przeczytaj zdania z listy po kolei. Po każdym zrób 2 sekundy ciszy.</li>
           <li>Wgraj nagranie tutaj. Gra sama potnie je na zdania.</li>
         </ol>
         <label class="cta cta-file" id="take-label">Wgraj nagranie<input class="vh" id="take-file" type="file" accept="audio/*,video/*,.m4a,.mp3,.wav,.aac,.caf,.ogg,.opus,.flac,.mp4,.mov,.webm"></label>
@@ -1604,6 +1622,8 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     sigPath.style.strokeDashoffset = 0;
   }
 
+  // Dziecko często stuka w samą paczkę zamiast w guzik skanera.
+  held.addEventListener('click', () => scanBtn.click());
   scanBtn.addEventListener('click', () => {
     if (scanned || state.step !== 'scan') return;
     scanned = true;
@@ -1740,6 +1760,8 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   const ICON_PLAY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path class="solid" d="M8 5.5v13l10.5-6.5z"/></svg>';
   const ICON_UP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V5M7.5 9.5 12 5l4.5 4.5M5 19h14"/></svg>';
   const ICON_DEL = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>';
+  const ICON_MIC = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8.5" y="3" width="7" height="11" rx="3.5"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>';
+  const ICON_STOP = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect class="solid" x="6.5" y="6.5" width="11" height="11" rx="2"/></svg>';
   const linesEl = $('#lines');
   const studioStatus = $('#studio-status');
   const takeFile = $('#take-file');
@@ -1765,10 +1787,12 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   function renderLines() {
     linesEl.innerHTML = LINES.map((l, i) => {
       const has = !!clips[l.id];
-      return `<li class="ln${has ? ' has' : ''}" data-id="${l.id}">` +
+      const on = rec && rec.id === l.id;
+      return `<li class="ln${has ? ' has' : ''}${l.id === nextId && !rec ? ' next' : ''}" data-id="${l.id}">` +
         `<span class="ln-num">${i + 1}</span>` +
-        `<span class="ln-body"><span class="ln-text">${l.t}</span><span class="ln-chip">${has ? 'Twój głos' : 'Głos komputera'}</span></span>` +
+        `<span class="ln-body"><span class="ln-text">${l.t}</span><span class="ln-chip">${on ? 'Nagrywam…' : has ? 'Twój głos' : 'Głos komputera'}</span></span>` +
         `<span class="ln-act">` +
+          (micOk ? `<button class="mini rec${on ? ' on' : ''}" type="button" data-act="rec" aria-label="${on ? 'Zakończ nagrywanie' : 'Nagraj zdanie ' + (i + 1)}">${on ? ICON_STOP : ICON_MIC}</button>` : '') +
           `<button class="mini" type="button" data-act="play" aria-label="Odsłuchaj zdanie ${i + 1}">${ICON_PLAY}</button>` +
           `<label class="mini" title="Wgraj nagranie tego zdania">${ICON_UP}<input class="vh" type="file" accept="${ACCEPT}" data-act="one" aria-label="Wgraj nagranie zdania ${i + 1}"></label>` +
           (has ? `<button class="mini" type="button" data-act="del" aria-label="Usuń nagranie zdania ${i + 1}">${ICON_DEL}</button>` : '') +
@@ -1837,10 +1861,14 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
         if (p && p.then) p.then(res, rej);
       } catch (e) { rej(e); }
     });
-    const ch = buf.numberOfChannels, len = buf.length;
     const data = [];
-    for (let c = 0; c < ch; c++) data.push(buf.getChannelData(c));
-    const ratio = buf.sampleRate / RATE;
+    for (let c = 0; c < buf.numberOfChannels; c++) data.push(buf.getChannelData(c));
+    return to16k(data, buf.sampleRate);
+  }
+  // Kanały o dowolnej częstotliwości -> mono 16 kHz (uśrednianie okna, bez aliasingu).
+  function to16k(data, sr) {
+    const ch = data.length, len = data[0].length;
+    const ratio = sr / RATE;
     const n = Math.floor(len / ratio);
     const out = new Float32Array(n);
     for (let i = 0; i < n; i++) {
@@ -1941,13 +1969,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     stopVoices();
     status('Słucham nagrania…', 'busy');
     try {
-      const pcm = await fileToPcm(file);
-      const segs = findSegments(pcm, 0);
-      const s = segs.length ? segs[0][0] : 0;
-      const e = segs.length ? segs[segs.length - 1][1] : pcm.length;
-      await saveClip(id, cut(pcm, s, e));
-      status(`Zapisane: „${LINE[id]}”`, 'ok');
-      playClip(id);
+      await saveTrimmed(id, await fileToPcm(file));
     } catch (err) {
       status(errText(err), 'warn');
     } finally {
@@ -1956,6 +1978,91 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
       renderLines();
     }
   }
+  // Przycina ciszę na brzegach, zapisuje, odtwarza i wskazuje następne zdanie do nagrania.
+  async function saveTrimmed(id, pcm) {
+    let peak = 0;
+    for (let i = 0; i < pcm.length; i++) peak = Math.max(peak, Math.abs(pcm[i]));
+    if (peak < 0.02) {
+      status('Nic nie słychać. Mów bliżej mikrofonu i nagraj jeszcze raz.', 'warn');
+      return false;
+    }
+    const segs = findSegments(pcm, 0);
+    const s = segs.length ? segs[0][0] : 0;
+    const e = segs.length ? segs[segs.length - 1][1] : pcm.length;
+    await saveClip(id, cut(pcm, s, e));
+    status(`Zapisane: „${LINE[id]}”`, 'ok');
+    playClip(id);
+    nextId = (LINES.slice(LINES.findIndex((l) => l.id === id) + 1).find((l) => !clips[l.id]) || {}).id || null;
+    return true;
+  }
+
+  /* ---------- nagrywanie mikrofonem (działa poza ramką claude.ai, np. na GitHub Pages) ---------- */
+  let micOk = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) && window.self === window.top;
+  let rec = null;
+  let nextId = null;
+  async function startRec(id) {
+    if (working || rec) return;
+    const a = audio();
+    if (!a) { status(errText({ name: 'NoAudio' }), 'warn'); return; }
+    stopVoices();
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+    } catch (e) {
+      if (e && e.name === 'NotAllowedError') status('Gra nie dostała zgody na mikrofon. Zezwól na mikrofon w ustawieniach przeglądarki albo wgraj plik.', 'warn');
+      else { micOk = false; status('Mikrofon jest tu niedostępny. Wgraj nagranie z pliku.', 'warn'); }
+      paintMic();
+      renderLines();
+      return;
+    }
+    const src = a.createMediaStreamSource(stream);
+    const proc = a.createScriptProcessor(4096, 1, 1);
+    const sink = a.createGain();
+    sink.gain.value = 0;
+    const chunks = [];
+    proc.onaudioprocess = (ev) => { chunks.push(new Float32Array(ev.inputBuffer.getChannelData(0))); };
+    src.connect(proc);
+    proc.connect(sink);
+    sink.connect(a.destination);
+    rec = { id, chunks, sr: a.sampleRate, stream, src, proc, sink, t0: performance.now() };
+    const tick = () => {
+      const sec = (performance.now() - rec.t0) / 1000;
+      status(`Nagrywam… ${Math.floor(sec)} s. Przeczytaj zdanie i stuknij Stop.`, 'recording');
+      if (sec >= MAX_SEC) stopRec();
+    };
+    rec.timer = setInterval(tick, 250);
+    tick();
+    renderLines();
+  }
+  async function stopRec() {
+    if (!rec) return;
+    const r = rec;
+    rec = null;
+    clearInterval(r.timer);
+    try { r.proc.disconnect(); r.src.disconnect(); r.sink.disconnect(); } catch (e) {}
+    r.stream.getTracks().forEach((t) => t.stop());
+    const len = r.chunks.reduce((s, c) => s + c.length, 0);
+    const all = new Float32Array(len);
+    let o = 0;
+    r.chunks.forEach((c) => { all.set(c, o); o += c.length; });
+    working = true;
+    try {
+      await saveTrimmed(r.id, to16k([all], r.sr));
+    } catch (err) {
+      status(errText(err), 'warn');
+    } finally {
+      working = false;
+      paintVoice();
+      renderLines();
+      const next = nextId && linesEl.querySelector(`.ln[data-id="${nextId}"]`);
+      if (next) next.scrollIntoView({ block: 'center', behavior: reduce ? 'auto' : 'smooth' });
+    }
+  }
+  function paintMic() {
+    $('#mic-steps').hidden = !micOk;
+    $('#mic-off').hidden = micOk;
+  }
+  paintMic();
 
   takeFile.addEventListener('change', () => {
     const f = takeFile.files && takeFile.files[0];
@@ -1975,6 +2082,12 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     if (!b) return;
     const id = b.closest('.ln').dataset.id;
     audio();
+    if (b.dataset.act === 'rec') {
+      if (rec && rec.id === id) stopRec();
+      else if (!rec) startRec(id);
+      return;
+    }
+    if (rec) return;
     if (b.dataset.act === 'play') {
       if (clips[id]) playClip(id);
       else speak(LINE[id]);
@@ -1999,8 +2112,53 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     status(storeNote());
     say(null, 'Studio nagrań: Max usłyszy Twój głos.', { silent: true });
   });
-  $('#btn-studio-play').addEventListener('click', () => restartGame());
+  $('#btn-studio-play').addEventListener('click', () => { if (rec) stopRec(); restartGame(); });
   initVoice();
+
+  /* ---------- rączka-podpowiedź: Max nie czyta, więc po chwili bezczynności gra pokazuje, co stuknąć ---------- */
+  const hand = document.createElement('div');
+  hand.className = 'hand';
+  hand.textContent = '👆';
+  hand.hidden = true;
+  hand.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(hand);
+  let idleTimer = 0;
+  function hintTarget() {
+    switch (state.screen) {
+      case 's-start': return $('#btn-start');
+      case 's-depot': return goBtn.disabled ? $('#pkgs .pkg:not(.gone)') : goBtn;
+      case 's-map': return busy ? null : $('.house.pending .hit');
+      case 's-door':
+        if (state.step === 'bell') return ringing ? null : $('#bell-big');
+        if (state.step === 'pick') return $(`#pick-row .pkg[data-rid="${state.current.rid}"]`);
+        if (state.step === 'scan') return scanned ? null : scanBtn;
+        if (state.step === 'reveal') return $('#btn-back');
+        return null;
+      default: return null;
+    }
+  }
+  function showHint() {
+    const el = menu.hidden ? hintTarget() : null;
+    const r = el && el.getBoundingClientRect();
+    if (r && r.width) {
+      hand.style.left = (r.left + r.width / 2) + 'px';
+      hand.style.top = (r.bottom - Math.min(r.height * 0.4, 30)) + 'px';
+      hand.hidden = false;
+      // Przypomnij polecenie głosem, jeśli akurat nikt nie mówi.
+      if (!voiceBusy() && state.screen !== 's-start') {
+        if (last.id && clips[last.id]) playClip(last.id);
+        else speak(last.text);
+      }
+    }
+    idleTimer = setTimeout(showHint, 12000);
+  }
+  function armHint() {
+    clearTimeout(idleTimer);
+    hand.hidden = true;
+    idleTimer = setTimeout(showHint, 8000);
+  }
+  document.addEventListener('pointerdown', armHint, true);
+  armHint();
 
   /* ---------- od nowa: etap albo cała gra ---------- */
   const menu = $('#menu');
@@ -2020,6 +2178,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     if (geom) state.vanLen = geom.start;
   }
   function restartGame() {
+    if (rec) stopRec();
     resetPlay();
     state.round = [];
     state.current = null;
