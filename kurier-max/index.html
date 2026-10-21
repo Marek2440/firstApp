@@ -54,6 +54,7 @@
   --gold-hi: #FFE27A;
   --gold-deep: #B57F00;
   --shade: rgba(29, 35, 64, .10);
+  --veil: rgba(29, 35, 64, .55);
   --ok-soft: #DDF3E5;
   --warn-soft: #FFF0C7;
 
@@ -122,7 +123,33 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
 }
 .icon-btn:active { transform: translateY(3px); box-shadow: none; }
 .icon-btn svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
-.icon-btn .solid { fill: currentColor; }
+.icon-btn .solid { fill: currentColor; stroke: none; }
+.icon-btn.wide { width: auto; display: flex; align-items: center; gap: 6px; padding: 0 12px 0 9px; font-weight: 900; font-size: 16px; white-space: nowrap; }
+
+/* ---------- od nowa ---------- */
+.veil {
+  position: fixed; inset: 0; z-index: 100; display: grid; place-items: center;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  background: var(--veil); animation: veilin .2s ease-out;
+}
+.menu-card {
+  width: min(440px, 100%); display: flex; flex-direction: column; gap: 12px; padding: 20px;
+  background: var(--paper); border: 4px solid var(--ink); border-radius: 22px; box-shadow: 0 8px 0 var(--ink);
+}
+.menu-title { margin: 0 0 4px; font-family: var(--f-display); font-weight: 400; font-size: 34px; line-height: 1; }
+.menu-btn {
+  width: 100%; display: flex; align-items: center; gap: 14px; padding: 12px 14px; text-align: left;
+  border-radius: 16px; border: 3px solid var(--ink); background: var(--paper); box-shadow: 0 4px 0 var(--ink); cursor: pointer;
+}
+.menu-btn:active { transform: translateY(4px); box-shadow: none; }
+.menu-btn:disabled { opacity: .45; cursor: default; transform: none; box-shadow: 0 4px 0 var(--ink); }
+.menu-ico { flex: none; width: 48px; height: 48px; display: grid; place-items: center; border-radius: 12px; background: var(--sun); border: 3px solid var(--ink); }
+#btn-restart .menu-ico { background: var(--van); color: var(--paper); }
+.menu-ico svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.menu-txt { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.menu-txt b { font-size: 19px; font-weight: 900; }
+.menu-txt small { font-size: 15px; font-weight: 700; line-height: 1.3; color: var(--muted); }
+#btn-resume { align-self: center; margin-top: 6px; padding: 10px 30px 12px; font-size: 26px; }
 
 /* ---------- komunikat z bazy ---------- */
 .radio {
@@ -635,10 +662,13 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
 }
 @media (max-width: 480px) {
   .brand span { display: none; }
+  .icon-btn.wide { width: 46px; padding: 0; justify-content: center; }
+  .icon-btn.wide span { display: none; }
   .ln { grid-template-columns: auto 1fr; }
   .ln-act { grid-column: 2; }
 }
 
+@keyframes veilin { from { opacity: 0; } }
 @keyframes fadein { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 @keyframes slidein { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: none; } }
 @keyframes popin { from { opacity: 0; transform: translateX(-50%) scale(.6); } to { opacity: 1; transform: translateX(-50%) scale(1); } }
@@ -677,6 +707,10 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
       <span>Kurier Max</span>
     </div>
     <ol class="track" id="track" aria-label="Paczki na dziś"></ol>
+    <button class="icon-btn wide" id="btn-menu" type="button" aria-label="Od nowa" aria-haspopup="dialog">
+      <svg viewBox="0 0 28 28" aria-hidden="true"><path d="M5.5 14a8.5 8.5 0 1 0 2.5-6"/><path d="M6.5 3.5V8.5h5"/></svg>
+      <span>Od nowa</span>
+    </button>
     <button class="icon-btn" id="btn-sound" type="button" aria-pressed="true" aria-label="Dźwięk i lektor">
       <svg viewBox="0 0 28 28" aria-hidden="true">
         <path class="solid" d="M4 10.5h4.5L14 6v16l-5.5-4.5H4z"/>
@@ -690,7 +724,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     <span class="radio-tag" id="radio-tag"><i></i>BAZA</span>
     <p class="radio-msg" id="radio-msg" aria-live="polite">Tu baza. Kurierze Max, czekamy na Ciebie!</p>
     <button class="icon-btn" id="btn-repeat" type="button" aria-label="Powtórz komunikat">
-      <svg viewBox="0 0 28 28" aria-hidden="true"><path d="M6 14a8 8 0 1 0 2.4-5.7"/><path d="M6.5 4.5v4.5H11"/></svg>
+      <svg viewBox="0 0 28 28" aria-hidden="true"><path d="M5 5.5h18a1.5 1.5 0 0 1 1.5 1.5v11a1.5 1.5 0 0 1-1.5 1.5h-11l-5 4v-4H5A1.5 1.5 0 0 1 3.5 18V7A1.5 1.5 0 0 1 5 5.5z"/><path class="solid" d="M12 9.5v7l5.5-3.5z"/></svg>
     </button>
   </div>
 
@@ -877,6 +911,21 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
       </div>
     </section>
   </main>
+
+  <div class="veil" id="menu" role="dialog" aria-modal="true" aria-labelledby="menu-title" hidden>
+    <div class="menu-card">
+      <h2 class="menu-title" id="menu-title">Od nowa?</h2>
+      <button class="menu-btn" id="btn-stage" type="button">
+        <span class="menu-ico"><svg viewBox="0 0 28 28" aria-hidden="true"><path d="M5.5 14a8.5 8.5 0 1 0 2.5-6"/><path d="M6.5 3.5V8.5h5"/></svg></span>
+        <span class="menu-txt"><b>Ten etap od nowa</b><small id="stage-desc"></small></span>
+      </button>
+      <button class="menu-btn" id="btn-restart" type="button">
+        <span class="menu-ico"><svg viewBox="0 0 28 28" aria-hidden="true"><path d="M8 25V4M8 5h13l-3 4.5 3 4.5H8"/></svg></span>
+        <span class="menu-txt"><b>Cała gra od nowa</b><small>Nowe paczki i powrót na start.</small></span>
+      </button>
+      <button class="cta" id="btn-resume" type="button">Graj dalej</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -919,6 +968,12 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
 
   const state = { round: [], vanLen: null, current: null, step: null, screen: 's-start' };
   let busy = false;
+  // Każdy restart podbija `epoch`, więc odłożone kroki poprzedniej rozgrywki już się nie wykonają.
+  let epoch = 0;
+  function later(fn, ms) {
+    const e = epoch;
+    return setTimeout(() => { if (e === epoch) fn(); }, ms);
+  }
 
   /* ---------- dźwięk ---------- */
   let soundOn = true;
@@ -990,7 +1045,16 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     o.connect(f).connect(g).connect(a.destination);
     o.start(t); lfo.start(t);
     o.stop(t + sec + 0.05); lfo.stop(t + sec + 0.05);
+    stopEngine = () => {
+      try {
+        const now = a.currentTime;
+        g.gain.cancelScheduledValues(now);
+        g.gain.setTargetAtTime(0.0001, now, 0.04);
+        o.stop(now + 0.2); lfo.stop(now + 0.2);
+      } catch (e) {}
+    };
   }
+  let stopEngine = () => {};
 
   /* ---------- lektor ---------- */
   let voice = null;
@@ -1251,7 +1315,8 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     const dx = (b.left + b.width / 2) - (a.left + a.width / 2);
     const dy = (b.top + b.height / 2) - (a.top + a.height / 2);
     const sc = Math.max(0.3, Math.min(b.width / a.width, b.height / a.height));
-    const finish = () => { clone.remove(); done(); };
+    const ep = epoch;
+    const finish = () => { clone.remove(); if (ep === epoch) done(); };
     if (!clone.animate) { finish(); return; }
     const anim = clone.animate([
       { transform: 'translate(0, 0) scale(1) rotate(0deg)' },
@@ -1273,7 +1338,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     sfx.beep();
     b.classList.add('scan');
     pik(b);
-    setTimeout(() => {
+    later(() => {
       b.classList.remove('scan');
       fly(b, slot, () => {
         slot.classList.add('full');
@@ -1283,7 +1348,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
         renderHUD(state.round.indexOf(p));
         if (COUNT_WORDS[idx]) say('c' + (idx + 1), COUNT_WORDS[idx], { keepStrip: true });
         if (state.round.every((x) => x.status !== 'sort')) {
-          setTimeout(() => {
+          later(() => {
             rear.classList.remove('open');
             sfx.door();
             goBtn.disabled = false;
@@ -1349,9 +1414,11 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     const dur = reduce ? 250 : Math.min(3600, Math.max(900, d * 2));
     engine(dur / 1000);
     vanTd.classList.add('driving');
+    const ep = epoch;
     const t0 = performance.now();
     const ease = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
     const frame = (now) => {
+      if (ep !== epoch) return;
       const k = Math.min(1, (now - t0) / dur);
       placeVan(from + d * ease(k));
       if (k < 1) requestAnimationFrame(frame);
@@ -1412,7 +1479,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     busy = true;
     say('go', `Jedziemy do ${r.dla}!`);
     drive(geom.stops[i], () => {
-      setTimeout(() => { busy = false; enterDoor(p); }, wait(450));
+      later(() => { busy = false; enterDoor(p); }, wait(450));
     });
   }
   housesG.addEventListener('click', (e) => {
@@ -1476,8 +1543,8 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     restart(bell, 'ding');
     restart(bellBig, 'ding');
     bell.classList.remove('waiting');
-    setTimeout(() => { doorway.classList.add('open'); sfx.door(); }, wait(1100));
-    setTimeout(() => {
+    later(() => { doorway.classList.add('open'); sfx.door(); }, wait(1100));
+    later(() => {
       animalSay(r, 'Dzień dobry! Czy masz paczkę dla mnie?');
       pickRow.innerHTML = shuffle(state.round.filter((x) => x.status === 'van')).map((x) => pkgHTML(x)).join('');
       setStep('pick');
@@ -1545,7 +1612,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     sfx.beep();
     pk.classList.add('scan');
     pik(pk);
-    setTimeout(() => {
+    later(() => {
       sfx.beep2();
       pk.classList.remove('scan');
       lcdSt.textContent = 'DORĘCZONO';
@@ -1554,7 +1621,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
       drawSig();
       say('scanned', `Pik! Doręczone. ${r.name} podpisuje się na skanerze.`);
     }, wait(500));
-    setTimeout(() => {
+    later(() => {
       p.status = 'done';
       p.time = new Date().toISOString();
       renderHUD(state.round.indexOf(p));
@@ -1573,8 +1640,8 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     if (left) { enterMap('next', LEFT_MSG[left] || 'Dokąd teraz jedziemy?'); return; }
     enterMap('back', LINE.back);
     busy = true;
-    setTimeout(() => drive(geom.start, () => {
-      setTimeout(() => { busy = false; enterEnd(); }, wait(500));
+    later(() => drive(geom.start, () => {
+      later(() => { busy = false; enterEnd(); }, wait(500));
     }), wait(1400));
   });
 
@@ -1641,7 +1708,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     sfx.honk();
     say('start', LINE.start);
     newRound();
-    setTimeout(() => enterDepot(true), wait(900));
+    later(() => enterDepot(true), wait(900));
   });
 
   const soundBtn = $('#btn-sound');
@@ -1924,16 +1991,73 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     status(storeNote());
     say(null, 'Studio nagrań: Max usłyszy Twój głos.', { silent: true });
   });
-  $('#btn-studio-play').addEventListener('click', () => {
+  $('#btn-studio-play').addEventListener('click', () => restartGame());
+  initVoice();
+
+  /* ---------- od nowa: etap albo cała gra ---------- */
+  const menu = $('#menu');
+  const stageBtn = $('#btn-stage');
+  const STAGES = {
+    's-depot': 'Sortownia: paczki wracają na taśmę.',
+    's-map': 'Trasa: paczki wracają do auta, auto staje przy sortowni.',
+    's-door': 'Ta dostawa: drzwi znowu są zamknięte.',
+    's-end': 'Te same paczki jeszcze raz, od sortowni.',
+  };
+  function resetPlay() {
+    epoch++;
+    busy = false;
     stopVoices();
+    stopEngine();
+    vanTd.classList.remove('driving');
+    if (geom) state.vanLen = geom.start;
+  }
+  function restartGame() {
+    resetPlay();
     state.round = [];
     state.current = null;
-    if (geom) state.vanLen = geom.start;
     renderHUD();
     show('s-start');
     say(null, 'Tu baza. Kurierze Max, czekamy na Ciebie!', { silent: true });
-  });
-  initVoice();
+  }
+  function restartStage() {
+    const sc = state.screen;
+    if (!STAGES[sc]) return;
+    if (sc === 's-door') {
+      // Auto zostaje pod domem, wraca tylko ta jedna dostawa.
+      const p = state.current;
+      epoch++;
+      busy = false;
+      stopVoices();
+      if (p.status === 'done') { p.status = 'van'; p.time = null; renderHUD(); }
+      enterDoor(p);
+      return;
+    }
+    resetPlay();
+    if (sc === 's-map') {
+      state.round.forEach((p) => { if (p.status === 'done') { p.status = 'van'; p.time = null; } });
+      renderHUD();
+      enterMap('map', LINE.map);
+    } else {
+      state.round.forEach((p) => { p.status = 'sort'; p.time = null; });
+      renderHUD();
+      enterDepot();
+    }
+  }
+  function openMenu() {
+    stopVoices();
+    const desc = STAGES[state.screen];
+    stageBtn.disabled = !desc;
+    $('#stage-desc').textContent = desc || 'Na tym ekranie nie ma etapu do powtórzenia.';
+    menu.hidden = false;
+    (desc ? stageBtn : $('#btn-restart')).focus();
+  }
+  function closeMenu() { menu.hidden = true; }
+  $('#btn-menu').addEventListener('click', () => { audio(); openMenu(); });
+  $('#btn-resume').addEventListener('click', closeMenu);
+  menu.addEventListener('click', (e) => { if (e.target === menu) closeMenu(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !menu.hidden) closeMenu(); });
+  stageBtn.addEventListener('click', () => { closeMenu(); restartStage(); });
+  $('#btn-restart').addEventListener('click', () => { closeMenu(); restartGame(); });
 
   /* ---------- przywracanie po aktualizacji strony ---------- */
   try { window.claude?.hot?.snapshot?.(() => ({ round: state.round, vanLen: state.vanLen })); } catch (e) {}
