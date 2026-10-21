@@ -699,13 +699,14 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
 .tape-roll { width: 64px; height: 64px; border-radius: 50%; background: var(--tape); border: 4px solid var(--ink); box-shadow: inset 0 0 0 14px var(--tape), inset 0 0 0 18px var(--box-deep); }
 .printer { position: relative; width: 84px; height: 56px; border-radius: 10px; background: var(--device); border: 4px solid var(--ink); }
 .printer::after { content: ""; position: absolute; left: 14px; right: 14px; top: 12px; height: 6px; border-radius: 3px; background: var(--ink); }
-.printer-wrap { position: relative; display: flex; flex-direction: column; align-items: center; }
+.printer-wrap { position: relative; display: flex; align-items: center; gap: 14px; }
 .print-label {
-  position: absolute; bottom: calc(100% + 8px); left: 50%; width: 110px; height: 72px; padding: 0;
+  order: 2; flex: none; width: 110px; height: 72px; padding: 0;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
   background: var(--paper); border: 3px solid var(--ink); border-radius: 6px; box-shadow: 0 4px 0 var(--ink); cursor: pointer;
-  transform: translateX(-50%); font-family: var(--f-emoji); font-size: 30px; line-height: 1;
+  font-family: var(--f-emoji); font-size: 30px; line-height: 1;
 }
+.print-label[hidden] { display: flex !important; visibility: hidden; }
 .print-label.out { animation: printout .6s ease-out; }
 .print-label .pl-bar { width: 100%; height: 8px; margin-top: -10px; }
 .print-label .pl-no { font-family: var(--f-lcd); font-size: 15px; }
@@ -814,6 +815,12 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
 #station:focus-visible .hit { stroke: var(--plate); stroke-width: 5; stroke-dasharray: 10 6; }
 #station .halo { fill: var(--sun); opacity: 0; }
 #map.low-fuel #station .halo { transform-box: fill-box; transform-origin: center; animation: halo 1.2s ease-in-out infinite; }
+/* Przy pustym baku stacja rośnie, a nad nią skacze strzałka, żeby nie zginęła w pętli drogi. */
+#station .st-art { transform-box: fill-box; transform-origin: 50% 100%; transition: transform .35s ease; }
+#map.low-fuel #station .st-art { transform: scale(1.45); }
+#station .st-arrow { display: none; }
+#map.low-fuel #station .st-arrow { display: inline; animation: bob .8s ease-in-out infinite; }
+.st-arr { fill: var(--sun); stroke: var(--ink); stroke-width: 4; stroke-linejoin: round; }
 .st-roof { fill: var(--brake); stroke: var(--ink); stroke-width: 3; }
 .st-pole { fill: var(--curb); stroke: var(--ink); stroke-width: 2; }
 .st-pump { fill: var(--ok); stroke: var(--ink); stroke-width: 3; }
@@ -827,7 +834,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
 .track li.order span, .track li.wait span { opacity: .45; filter: grayscale(1); }
 
 @keyframes away { to { transform: translateX(120vw) rotate(8deg); } }
-@keyframes printout { from { transform: translate(-50%, 60px) scaleY(.2); opacity: 0; } to { transform: translateX(-50%); opacity: 1; } }
+@keyframes printout { from { transform: translateX(-70px) scaleX(.2); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes rainfall { to { background-position: 0 60px, 23px 120px; } }
 @keyframes wipe { from { transform: rotate(-72deg); } to { transform: rotate(72deg); } }
 @keyframes blinkbg { 50% { background: var(--sun); } }
@@ -1065,14 +1072,17 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
         </g>
         <g id="trees"></g>
         <g id="station" transform="translate(505 600)" role="button" tabindex="0" aria-label="Stacja paliw">
-          <circle class="halo" r="64"/>
-          <rect class="hit" x="-62" y="-62" width="124" height="112" rx="18"/>
-          <rect class="st-pole" x="-46" y="-34" width="8" height="62"/>
-          <rect class="st-pole" x="38" y="-34" width="8" height="62"/>
-          <rect class="st-roof" x="-56" y="-52" width="112" height="20" rx="4"/>
-          <text class="st-t" x="0" y="-37" text-anchor="middle">PALIWO</text>
-          <rect class="st-pump" x="-14" y="-18" width="28" height="46" rx="4"/>
-          <rect class="st-screen" x="-9" y="-12" width="18" height="10" rx="2"/>
+          <circle class="halo" r="84"/>
+          <rect class="hit" x="-84" y="-150" width="168" height="200" rx="18"/>
+          <g class="st-art">
+            <rect class="st-pole" x="-46" y="-34" width="8" height="62"/>
+            <rect class="st-pole" x="38" y="-34" width="8" height="62"/>
+            <rect class="st-roof" x="-56" y="-52" width="112" height="20" rx="4"/>
+            <text class="st-t" x="0" y="-37" text-anchor="middle">PALIWO</text>
+            <rect class="st-pump" x="-14" y="-18" width="28" height="46" rx="4"/>
+            <rect class="st-screen" x="-9" y="-12" width="18" height="10" rx="2"/>
+          </g>
+          <g class="st-arrow"><path class="st-arr" d="M-18 -140H18V-116H34L0 -88L-34 -116H-18Z"/></g>
         </g>
         <g id="houses"></g>
         <g id="van" transform="translate(400 735)" role="button" aria-label="Auto kuriera, klakson">
@@ -1372,7 +1382,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   const $ = (s) => document.querySelector(s);
   const wait = (ms) => (reduce ? Math.min(ms, 120) : ms);
 
-  const state = { round: [], vanLen: null, current: null, step: null, screen: 's-start', level: 0, board: 0, fuel: 100 };
+  const state = { round: [], vanLen: null, current: null, step: null, screen: 's-start', level: 0, board: 0, fuel: 100, refuels: 0 };
   let busy = false;
   // Najdalsza odblokowana trasa (na tym urządzeniu).
   let progress = 0;
@@ -1392,7 +1402,9 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   const cnt = () => Math.min(5, Math.max(1, countPick || lvl().count));
   const dels = () => state.round.filter((p) => p.kind !== 'pick');
   const pendingStops = () => state.round.filter((p) => (p.kind === 'pick' ? p.status === 'wait' : p.status === 'van'));
-  const lowFuel = () => !!lvl().fuel && state.fuel < 35 && pendingStops().length > 0;
+  // Brak paliwa blokuje dalszą jazdę. Powrót do sortowni też jest kursem, więc przy jednej paczce
+  // tankujemy przed powrotem; po pierwszym tankowaniu na sam powrót paliwa już wystarcza.
+  const lowFuel = () => !!lvl().fuel && state.fuel < 35 && (pendingStops().length > 0 || state.refuels === 0);
   // Każdy restart podbija `epoch`, więc odłożone kroki poprzedniej rozgrywki już się nie wykonają.
   let epoch = 0;
   function later(fn, ms) {
@@ -1580,6 +1592,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     { id: 'rain', t: 'Pada! Włącz wycieraczki.' },
     { id: 'lights', t: 'Robi się ciemno. Włącz światła.' },
     { id: 'fuel', t: 'Mało paliwa! Jedziemy na stację.' },
+    { id: 'station', t: 'Stacja paliw świeci na mapie, pod żółtą strzałką. Stuknij ją!' },
     { id: 'pump', t: 'Przytrzymaj pistolet, żeby zatankować.' },
     { id: 'full', t: 'Pełny bak! Teraz zapłać kartą.' },
     { id: 'pickup', t: 'Ten zwierzak chce nadać paczkę. Połóż ją na wadze.' },
@@ -1754,6 +1767,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     if (lv.order) state.round.forEach((p) => { p.status = 'order'; p.ordered = true; });
     if (lv.pickup) state.round.push(mk(ids[n], 'pick', 'wait'));
     state.fuel = 100;
+    state.refuels = 0;
     state.current = null;
     if (geom) state.vanLen = geom.start;
     renderHUD();
@@ -1953,6 +1967,13 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     mapSvg.classList.toggle('low-fuel', lowFuel());
     placeVan(state.vanLen);
     say(id, text, { queue });
+    if (lowFuel()) pointStation();
+  }
+  // Lektor wskazuje stację, a rączka pojawia się nad nią od razu, nie dopiero po bezczynności.
+  function pointStation() {
+    say('station', LINE.station, { queue: true, keepStrip: true });
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(showHint, 3500);
   }
 
   function onHouse(i, g) {
@@ -1972,6 +1993,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     if (lowFuel()) {
       sfx.oops();
       say('fuel', 'Mało paliwa! Najpierw jedziemy na stację. Stuknij stację z napisem paliwo.');
+      pointStation();
       return;
     }
     busy = true;
@@ -2196,14 +2218,17 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
 
   $('#btn-back').addEventListener('click', () => {
     const left = pendingStops().length;
-    if (left && lowFuel()) { enterMap('fuel', LINE.fuel); return; }
+    if (lowFuel()) { enterMap('fuel', LINE.fuel); return; }
     if (left) { enterMap('next', LEFT_MSG[left] || 'Dokąd teraz jedziemy?'); return; }
+    goHome();
+  });
+  function goHome() {
     enterMap('back', LINE.back);
     busy = true;
     later(() => drive(geom.start, () => {
       later(() => { busy = false; enterEnd(); }, wait(500));
     }), wait(1400));
-  });
+  }
 
   /* ---------- koniec trasy ---------- */
   const confettiCv = $('#confetti');
@@ -2604,8 +2629,9 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     stopCockpit();
     sfx.thump();
     if (lvl().fuel) {
-      const stops = state.round.length;
-      state.fuel = Math.max(5, state.fuel - (stops >= 2 ? Math.min(70, Math.max(35, 70 / (stops - 1))) : 35));
+      // Po połowie kursów (w górę) bak spada do 34 %, poniżej progu 35 %: tankowanie jest na każdej trasie.
+      const half = Math.ceil(state.round.length / 2);
+      state.fuel = Math.max(5, state.fuel - 66 / half);
     }
     setBlink(null);
     const done = ck.done;
@@ -2711,7 +2737,9 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   payBtn.addEventListener('click', () => {
     sfx.beep2();
     payBtn.hidden = true;
-    enterMap('next', 'Zapłacone! Dokąd teraz jedziemy?');
+    state.refuels++;
+    if (pendingStops().length) enterMap('next', 'Zapłacone! Dokąd teraz jedziemy?');
+    else goHome();
   });
 
   /* ---------- start i przyciski ---------- */
@@ -3247,6 +3275,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     }
     resetPlay();
     state.fuel = 100;
+    state.refuels = 0;
     if (sc === 's-map') {
       state.round.forEach((p) => { if (p.status === 'done') { p.status = p.kind === 'pick' ? 'wait' : 'van'; p.time = null; } });
       renderHUD();
@@ -3275,7 +3304,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
 
   /* ---------- przywracanie po aktualizacji strony ---------- */
   try {
-    window.claude?.hot?.snapshot?.(() => ({ round: state.round, vanLen: state.vanLen, level: state.level, board: state.board, fuel: state.fuel }));
+    window.claude?.hot?.snapshot?.(() => ({ round: state.round, vanLen: state.vanLen, level: state.level, board: state.board, fuel: state.fuel, refuels: state.refuels }));
   } catch (e) {}
   function boot(data) {
     const d = data || {};
@@ -3285,11 +3314,12 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
       state.round = d.round;
       state.vanLen = typeof d.vanLen === 'number' ? d.vanLen : null;
       state.fuel = typeof d.fuel === 'number' ? d.fuel : 100;
+      state.refuels = typeof d.refuels === 'number' ? d.refuels : 0;
       renderLevels();
       renderHUD();
       if (state.round.some((p) => p.status === 'order')) enterOrder();
       else if (state.round.some((p) => p.status === 'sort')) enterDepot();
-      else if (pendingStops().length) enterMap('next', 'Dokąd teraz jedziemy?');
+      else if (pendingStops().length || lowFuel()) enterMap('next', 'Dokąd teraz jedziemy?');
       else enterEnd();
       return;
     }
