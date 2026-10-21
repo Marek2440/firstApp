@@ -615,6 +615,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   font-size: 16px; line-height: 1.35;
 }
 .studio-steps li::marker { font-weight: 900; }
+.studio-formats { margin: -4px 0 0; text-align: center; font-size: 15px; color: var(--muted); }
 .cta-file { position: relative; align-self: center; display: inline-flex; align-items: center; }
 .cta-file:focus-within { outline: 4px solid var(--plate); outline-offset: 3px; }
 .studio-status {
@@ -903,7 +904,8 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
           <li>Przeczytaj na głos zdania z listy poniżej, po kolei. Po każdym zrób 2 sekundy ciszy.</li>
           <li>Wgraj nagranie tutaj. Gra sama potnie je na zdania.</li>
         </ol>
-        <label class="cta cta-file" id="take-label">Wgraj nagranie<input class="vh" id="take-file" type="file" accept="audio/*,video/*"></label>
+        <label class="cta cta-file" id="take-label">Wgraj nagranie<input class="vh" id="take-file" type="file" accept="audio/*,video/*,.m4a,.mp3,.wav,.aac,.caf,.ogg,.opus,.flac,.mp4,.mov,.webm"></label>
+        <p class="studio-formats">Pasują pliki z dyktafonu (M4A), MP3, WAV, OGG oraz filmy z telefonu (MP4, MOV).</p>
         <p class="studio-status" id="studio-status" role="status"></p>
         <ol class="lines" id="lines"></ol>
         <p class="studio-lede">Zdanie wyszło źle? Nagraj je osobno i wgraj strzałką przy tym zdaniu.</p>
@@ -1734,6 +1736,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   paintSound();
 
   /* ---------- studio nagrań ---------- */
+  const ACCEPT = $('#take-file').getAttribute('accept');
   const ICON_PLAY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path class="solid" d="M8 5.5v13l10.5-6.5z"/></svg>';
   const ICON_UP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V5M7.5 9.5 12 5l4.5 4.5M5 19h14"/></svg>';
   const ICON_DEL = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>';
@@ -1762,7 +1765,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
         `<span class="ln-body"><span class="ln-text">${l.t}</span><span class="ln-chip">${has ? 'Twój głos' : 'Głos komputera'}</span></span>` +
         `<span class="ln-act">` +
           `<button class="mini" type="button" data-act="play" aria-label="Odsłuchaj zdanie ${i + 1}">${ICON_PLAY}</button>` +
-          `<label class="mini" title="Wgraj nagranie tego zdania">${ICON_UP}<input class="vh" type="file" accept="audio/*,video/*" data-act="one" aria-label="Wgraj nagranie zdania ${i + 1}"></label>` +
+          `<label class="mini" title="Wgraj nagranie tego zdania">${ICON_UP}<input class="vh" type="file" accept="${ACCEPT}" data-act="one" aria-label="Wgraj nagranie zdania ${i + 1}"></label>` +
           (has ? `<button class="mini" type="button" data-act="del" aria-label="Usuń nagranie zdania ${i + 1}">${ICON_DEL}</button>` : '') +
         `</span></li>`;
     }).join('');
@@ -1894,12 +1897,12 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   }
   function errText(e) {
     if (e && (e.name === 'EncodingError' || e.name === 'NotSupportedError' || e instanceof DOMException && !e.code))
-      return 'Nie umiem odczytać tego pliku. Spróbuj nagrania z Dyktafonu albo filmu nagranego telefonem.';
+      return 'Ta przeglądarka nie umie odczytać tego pliku. Spróbuj M4A z dyktafonu, MP3, WAV albo filmu z telefonu.';
     if (e && e.name === 'QuotaExceededError') return 'Przeglądarce zabrakło miejsca na nagrania. Nagrania działają do zamknięcia strony.';
     if (e && e.code === 'quota_exceeded') return 'Baza gry jest pełna. Usuń kilka nagrań i spróbuj jeszcze raz.';
     if (e && typeof e.code === 'string') return 'Nie udało się zapisać nagrania. Spróbuj jeszcze raz za chwilę.';
     if (e && e.name === 'NoAudio') return 'Ta przeglądarka nie odtwarza dźwięku z gier. Spróbuj w innej przeglądarce.';
-    return 'Nie umiem odczytać tego pliku. Spróbuj nagrania z Dyktafonu albo filmu nagranego telefonem.';
+    return 'Ta przeglądarka nie umie odczytać tego pliku. Spróbuj M4A z dyktafonu, MP3, WAV albo filmu z telefonu.';
   }
 
   async function processTake(file) {
