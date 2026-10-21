@@ -746,9 +746,9 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
 .dbtn.on { background: var(--sun); }
 .dbtn.blinking { animation: blinkbg .5s steps(2) infinite; }
 .dbtn:active { transform: translateY(4px); box-shadow: none; }
-.wheel { position: relative; width: clamp(104px, 26vw, 140px); aspect-ratio: 1; border: 0; padding: 0; background: none; cursor: pointer; transition: transform .3s; }
-.wheel svg { display: block; width: 100%; height: 100%; }
-.wheel.turn-l { transform: rotate(-24deg); } .wheel.turn-r { transform: rotate(24deg); }
+.steer { position: relative; width: clamp(104px, 26vw, 140px); aspect-ratio: 1; border: 0; padding: 0; background: none; cursor: pointer; transition: transform .3s; }
+.steer svg { display: block; width: 100%; height: 100%; }
+.steer.turn-l { transform: rotate(-24deg); } .steer.turn-r { transform: rotate(24deg); }
 .horn {
   position: absolute; left: 50%; top: 50%; width: 42%; height: 42%; transform: translate(-50%, -50%);
   border-radius: 50%; border: 4px solid var(--ink); background: var(--sun); color: var(--ink); cursor: pointer; padding: 0; display: grid; place-items: center;
@@ -1210,7 +1210,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
       <div class="dash gutter">
         <div class="dash-row">
           <button class="dbtn" id="blink-l" type="button" aria-label="Kierunkowskaz w lewo"><svg viewBox="0 0 32 32"><path class="solid" d="M4 16 15 6v6h13v8H15v6z"/></svg></button>
-          <div class="wheel" id="wheel">
+          <div class="steer" id="wheel">
             <svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="44" fill="none" stroke="#1D2340" stroke-width="12"/><circle cx="50" cy="50" r="44" fill="none" stroke="#555C75" stroke-width="6"/><path d="M8 54h84M50 54v40" stroke="#1D2340" stroke-width="10"/></svg>
             <button class="horn" id="horn" type="button" aria-label="Klakson"><svg viewBox="0 0 24 24"><path d="M4 10h3l6-4v12l-6-4H4zM16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/></svg></button>
           </div>
@@ -2538,7 +2538,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
       const k = Math.min(1, ck.d / STOP_D);
       tlight.className = 'tlight ' + ck.light;
       tlight.style.left = (62 + k * 18) + '%';
-      tlight.style.transform = `translate(-50%, -100%) scale(${(0.3 + k * k * 1.2).toFixed(3)})`;
+      tlight.style.transform = `translate(-50%, -100%) scale(${(0.3 + k * k * 0.6).toFixed(3)})`;
     }
   }
   function arriveCockpit() {
