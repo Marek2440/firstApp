@@ -636,6 +636,9 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
 .intro-feats { list-style: none; margin: 4px 0 8px; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 .intro-feats li { padding: 5px 12px; border-radius: 999px; border: 3px solid var(--ink); background: var(--sky); font-weight: 900; font-size: 15px; }
 .intro-feats li.new { background: var(--sun); }
+.counts-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-bottom: 6px; }
+.counts-label { margin: 0; font-weight: 900; font-size: 17px; }
+.counts .lvl { width: 52px; height: 52px; border-radius: 14px; font-size: 22px; }
 .intro-feats li i { font-style: normal; font-family: var(--f-emoji); }
 
 /* ---------- zamówienie ---------- */
@@ -1166,6 +1169,10 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
         <p class="intro-title" id="intro-title"></p>
         <p class="intro-news" id="intro-news"></p>
         <ul class="intro-feats" id="intro-feats"></ul>
+        <div class="counts-wrap">
+          <p class="counts-label" id="counts-label">Ile paczek?</p>
+          <div class="levels counts" id="counts" role="group" aria-labelledby="counts-label"></div>
+        </div>
         <button class="cta pulse" id="btn-intro" type="button">Jedziemy!</button>
       </div>
     </section>
@@ -1379,6 +1386,10 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   }
   useBoard(Math.max(0, LEVELS[state.level].board));
   const lvl = () => LEVELS[state.level];
+  // Liczba paczek wybrana przez rodzica (1–5) albo domyślna dla trasy.
+  let countPick = null;
+  try { countPick = parseInt(localStorage.getItem('kurier-max-count'), 10) || null; } catch (e) {}
+  const cnt = () => Math.min(5, Math.max(1, countPick || lvl().count));
   const dels = () => state.round.filter((p) => p.kind !== 'pick');
   const pendingStops = () => state.round.filter((p) => (p.kind === 'pick' ? p.status === 'wait' : p.status === 'van'));
   const lowFuel = () => !!lvl().fuel && state.fuel < 35 && pendingStops().length > 0;
@@ -1720,7 +1731,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   const track = $('#track');
   function renderHUD(popIdx) {
     if (!state.round.length) {
-      track.innerHTML = '<li></li>'.repeat(lvl().count + (lvl().pickup ? 1 : 0));
+      track.innerHTML = '<li></li>'.repeat(cnt() + (lvl().pickup ? 1 : 0));
       return;
     }
     track.innerHTML = state.round.map((p, i) => {
@@ -1737,10 +1748,11 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
       const digits = String(Math.floor(Math.random() * 1e9)).padStart(9, '0');
       return { rid, kind, no: `MX${digits}PL`, short: `MX ${digits.slice(-4)}`, status, time: null };
     };
-    state.round = ids.slice(0, lv.count).map((rid) => mk(rid, 'del', 'sort'));
+    const n = cnt();
+    state.round = ids.slice(0, n).map((rid) => mk(rid, 'del', 'sort'));
     // Zamówienie dotyczy każdej paczki: każdy zwierzak dzwoni, a Max pakuje wszystko sam.
     if (lv.order) state.round.forEach((p) => { p.status = 'order'; p.ordered = true; });
-    if (lv.pickup) state.round.push(mk(ids[lv.count], 'pick', 'wait'));
+    if (lv.pickup) state.round.push(mk(ids[n], 'pick', 'wait'));
     state.fuel = 100;
     state.current = null;
     if (geom) state.vanLen = geom.start;
@@ -1759,7 +1771,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     const ds = dels();
     const loaded = ds.filter((p) => p.status !== 'sort');
     hold.innerHTML = '<div class="slot"></div>'.repeat(ds.length);
-    hold.style.gridTemplate = ds.length > 4 ? '1fr 1fr / repeat(3, 1fr)' : ds.length === 3 ? '1fr 1fr / 1fr 1fr' : '';
+    hold.style.gridTemplate = ds.length > 4 ? '1fr 1fr / repeat(3, 1fr)' : ds.length >= 3 ? '1fr 1fr / 1fr 1fr' : ds.length === 2 ? '1fr / 1fr 1fr' : '1fr / 1fr';
     slots = [...hold.querySelectorAll('.slot')];
     slots.forEach((s, i) => {
       const p = loaded[i];
@@ -2284,24 +2296,42 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     stopCockpit();
     stopEngine();
     newRound();
+    show('s-intro');
+    paintIntro();
+    const lv = lvl();
+    say('intro', `Trasa ${state.level + 1}. ${lv.title}. ${lv.news}`, { queue: true });
+  }
+  function paintIntro() {
     const lv = lvl();
     const b = BOARDS[state.board];
-    show('s-intro');
     $('#intro-board').textContent = `${b.icon} ${b.name}`;
     $('#intro-num').textContent = `Trasa ${state.level + 1}`;
     $('#intro-title').textContent = lv.title;
     $('#intro-news').textContent = lv.news;
     const prev = LEVELS[state.level - 1] || {};
     const feats = [
-      ['📦', `${lv.count} ${lv.count < 5 ? 'paczki' : 'paczek'}`, false],
-      lv.order && ['☎️', `${lv.count} ${lv.count < 5 ? 'zamówienia' : 'zamówień'}`, !prev.order],
+      ['📦', `${cnt()} ${cnt() === 1 ? 'paczka' : cnt() < 5 ? 'paczki' : 'paczek'}`, false],
+      lv.order && ['☎️', `${cnt()} ${cnt() === 1 ? 'zamówienie' : cnt() < 5 ? 'zamówienia' : 'zamówień'}`, !prev.order],
       lv.cockpit && ['🚦', 'jazda autem', !prev.cockpit],
       lv.fuel && ['⛽', 'stacja paliw', !prev.fuel],
       lv.pickup && ['⬆️', 'odbiór paczki', !prev.pickup],
     ].filter(Boolean);
     $('#intro-feats').innerHTML = feats.map(([i, t, n]) => `<li class="${n && state.level ? 'new' : ''}"><i>${i}</i> ${t}</li>`).join('');
-    say('intro', `Trasa ${state.level + 1}. ${lv.title}. ${lv.news}`, { queue: true });
+    $('#counts').innerHTML = [1, 2, 3, 4, 5].map((k) =>
+      `<button class="lvl${k === cnt() ? ' on' : ''}" type="button" data-k="${k}" aria-label="${k} ${k === 1 ? 'paczka' : k < 5 ? 'paczki' : 'paczek'}">${k}</button>`).join('');
   }
+  $('#counts').addEventListener('click', (e) => {
+    const b = e.target.closest('.lvl');
+    if (!b) return;
+    countPick = +b.dataset.k;
+    try { localStorage.setItem('kurier-max-count', String(countPick)); } catch (err) {}
+    sfx.pop();
+    const board = state.board;
+    newRound();
+    if (lvl().board < 0) useBoard(board);
+    paintIntro();
+    say(null, `${countPick} ${countPick === 1 ? 'paczka' : countPick < 5 ? 'paczki' : 'paczek'}!`);
+  });
   $('#btn-intro').addEventListener('click', () => {
     audio();
     if (dels().some((p) => p.status === 'order')) enterOrder();
@@ -2573,7 +2603,10 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   function arriveCockpit() {
     stopCockpit();
     sfx.thump();
-    if (lvl().fuel) state.fuel = Math.max(5, state.fuel - 35);
+    if (lvl().fuel) {
+      const stops = state.round.length;
+      state.fuel = Math.max(5, state.fuel - (stops >= 2 ? Math.min(70, Math.max(35, 70 / (stops - 1))) : 35));
+    }
     setBlink(null);
     const done = ck.done;
     if (done) done();
