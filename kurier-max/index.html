@@ -615,6 +615,11 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   font-weight: 900; font-size: 17px; cursor: pointer;
 }
 .lvl.on { background: var(--van); color: var(--paper); }
+.lvl { position: relative; }
+.lvl.done::after {
+  content: "✓"; position: absolute; right: -6px; top: -6px; width: 18px; height: 18px; border-radius: 50%;
+  display: grid; place-items: center; background: var(--ok); color: var(--paper); border: 2px solid var(--ink); font: 900 11px/1 var(--f-body);
+}
 .lvl:disabled { opacity: .5; box-shadow: none; cursor: default; }
 .lvl svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; }
 
@@ -1327,7 +1332,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   // Kolejne trasy: każda dokłada jedną nowość, co dwie zmienia się plansza. board -1 = losowa.
   const LEVELS = [
     { title: 'Pierwsza trasa', board: 0, count: 3, news: 'Rozwozisz paczki po osiedlu.' },
-    { title: 'Zamówienie', board: 0, count: 3, order: true, news: 'Nowość: zwierzak dzwoni i zamawia, a Ty pakujesz paczkę.' },
+    { title: 'Zamówienie', board: 0, count: 3, order: true, news: 'Nowość: każdy zwierzak dzwoni i zamawia, a Ty pakujesz jego paczkę.' },
     { title: 'Za kierownicą', board: 1, count: 4, order: true, cockpit: true, news: 'Nowość: sam prowadzisz auto. Uważaj na światła!' },
     { title: 'Stacja paliw', board: 1, count: 4, order: true, cockpit: true, fuel: true, news: 'Nowość: gdy brakuje paliwa, tankujesz na stacji.' },
     { title: 'Paczka do odebrania', board: 2, count: 4, order: true, cockpit: true, fuel: true, pickup: true, news: 'Nowość: odbierasz paczkę od zwierzaka i ważysz ją.' },
@@ -1733,7 +1738,8 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
       return { rid, kind, no: `MX${digits}PL`, short: `MX ${digits.slice(-4)}`, status, time: null };
     };
     state.round = ids.slice(0, lv.count).map((rid) => mk(rid, 'del', 'sort'));
-    if (lv.order) { state.round[0].status = 'order'; state.round[0].ordered = true; }
+    // Zamówienie dotyczy każdej paczki: każdy zwierzak dzwoni, a Max pakuje wszystko sam.
+    if (lv.order) state.round.forEach((p) => { p.status = 'order'; p.ordered = true; });
     if (lv.pickup) state.round.push(mk(ids[lv.count], 'pick', 'wait'));
     state.fuel = 100;
     state.current = null;
@@ -2238,7 +2244,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     if (state.level === progress && progress < LEVELS.length - 1) {
       progress++;
       try { localStorage.setItem('kurier-max-level', String(progress)); } catch (e) {}
-      unlocked = ` Odblokowana trasa ${progress + 1}: ${LEVELS[progress].title}!`;
+      unlocked = ` Następna: trasa ${progress + 1}, ${LEVELS[progress].title}.`;
     }
     $('#end-sub').textContent = `Trasa ${state.level + 1} zaliczona.` + unlocked;
     $('#btn-again').textContent = state.level < LEVELS.length - 1 ? 'Następna trasa' : 'Jeszcze jedna wielka trasa';
@@ -2254,16 +2260,16 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
 
   /* ---------- wybór trasy i zapowiedź ---------- */
   const levelsEl = $('#levels');
-  const LOCK = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="11" width="12" height="9" rx="2"/><path d="M8.5 11V8a3.5 3.5 0 0 1 7 0v3"/></svg>';
   function renderLevels() {
+    // Każdą trasę można wybrać od razu; zaliczone mają znaczek.
     levelsEl.innerHTML = LEVELS.map((lv, i) =>
-      `<button class="lvl${i === state.level ? ' on' : ''}" type="button" data-l="${i}" ${i > progress ? 'disabled' : ''} aria-label="Trasa ${i + 1}: ${lv.title}${i > progress ? ' (jeszcze zamknięta)' : ''}">${i > progress ? LOCK : i + 1}</button>`
+      `<button class="lvl${i === state.level ? ' on' : ''}${i < progress ? ' done' : ''}" type="button" data-l="${i}" aria-label="Trasa ${i + 1}: ${lv.title}${i < progress ? ' (zaliczona)' : ''}">${i + 1}</button>`
     ).join('');
     $('#start-level').textContent = `Trasa ${state.level + 1}: ${lvl().title}`;
   }
   levelsEl.addEventListener('click', (e) => {
     const b = e.target.closest('.lvl');
-    if (!b || b.disabled) return;
+    if (!b) return;
     state.level = +b.dataset.l;
     useBoard(Math.max(0, lvl().board));
     sfx.pop();
@@ -2288,7 +2294,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     const prev = LEVELS[state.level - 1] || {};
     const feats = [
       ['📦', `${lv.count} ${lv.count < 5 ? 'paczki' : 'paczek'}`, false],
-      lv.order && ['☎️', 'zamówienie', !prev.order],
+      lv.order && ['☎️', `${lv.count} ${lv.count < 5 ? 'zamówienia' : 'zamówień'}`, !prev.order],
       lv.cockpit && ['🚦', 'jazda autem', !prev.cockpit],
       lv.fuel && ['⛽', 'stacja paliw', !prev.fuel],
       lv.pickup && ['⬆️', 'odbiór paczki', !prev.pickup],
@@ -2314,7 +2320,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   const printLabel = $('#print-label');
   let ostep = null;
   let ringTimer = 0;
-  const orderItem = () => state.round.find((p) => p.ordered);
+  const orderItem = () => state.round.find((p) => p.status === 'order') || null;
   function setOStep(s) {
     ostep = s;
     state.step = s;
@@ -2412,9 +2418,10 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
       sfx.thump();
       p.status = 'sort';
       renderHUD(state.round.indexOf(p));
-      say('packed', LINE.packed);
+      const more = state.round.some((x) => x.status === 'order');
+      say(more ? null : 'packed', more ? 'Paczka gotowa! Dzwoni następny zwierzak.' : LINE.packed);
       later(() => restart(obox, 'away'), wait(900));
-      later(() => enterDepot(true), wait(1900));
+      later(() => (more ? enterOrder(true) : enterDepot(true)), wait(1900));
     });
   });
 
