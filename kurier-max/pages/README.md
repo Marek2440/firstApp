@@ -2,7 +2,7 @@
 
 Gra dla pięciolatka: ładujesz paczki w sortowni, rozwozisz je autem po osiedlu, dzwonisz do drzwi i zbierasz podpisy na skanerze.
 
-**Zagraj:** https://marek2440.github.io/kurier-max/
+**Zagraj:** https://marek2440.github.io/Kurier-max/
 
 ## Na iPadzie jak aplikacja
 
