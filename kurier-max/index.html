@@ -825,6 +825,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   display: grid; place-items: center; background: var(--plate); color: var(--paper); border: 2px solid var(--ink); font: 900 12px/1 var(--f-body);
 }
 .track li.order span, .track li.wait span { opacity: .45; filter: grayscale(1); }
+.track li.call { border-color: var(--sun); }
 
 @keyframes away { to { transform: translateX(120vw) rotate(8deg); } }
 @keyframes printout { from { transform: translate(-50%, 60px) scaleY(.2); opacity: 0; } to { transform: translateX(-50%); opacity: 1; } }
@@ -1339,11 +1340,11 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   // Kolejne trasy: każda dokłada jedną nowość, co dwie zmienia się plansza. board -1 = losowa.
   const LEVELS = [
     { title: 'Pierwsza trasa', board: 0, count: 3, news: 'Rozwozisz paczki po osiedlu.' },
-    { title: 'Zamówienie', board: 0, count: 3, order: true, news: 'Nowość: każdy zwierzak dzwoni i zamawia, a Ty pakujesz jego paczkę.' },
+    { title: 'Zamówienie', board: 0, count: 3, order: true, news: 'Nowość: zwierzaki dzwonią i zamawiają, a Ty pakujesz ich paczki.' },
     { title: 'Za kierownicą', board: 1, count: 4, order: true, cockpit: true, news: 'Nowość: sam prowadzisz auto. Uważaj na światła!' },
     { title: 'Stacja paliw', board: 1, count: 4, order: true, cockpit: true, fuel: true, news: 'Nowość: gdy brakuje paliwa, tankujesz na stacji.' },
     { title: 'Paczka do odebrania', board: 2, count: 4, order: true, cockpit: true, fuel: true, pickup: true, news: 'Nowość: odbierasz paczkę od zwierzaka i ważysz ją.' },
-    { title: 'Wielka trasa', board: -1, count: 5, order: true, cockpit: true, fuel: true, pickup: true, news: 'Wszystko naraz, na losowej planszy.' },
+    { title: 'Wielka trasa', board: -1, count: 5, order: true, cockpit: true, fuel: true, pickup: true, news: 'Wszystko naraz, na losowej planszy. Telefon może zadzwonić nawet w trasie!' },
   ];
   let R = [];
   // Domek (x, y) i miejsce postoju auta na jezdni (sx, sy).
@@ -1366,7 +1367,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     2: 'Zostały jeszcze dwie paczki. Dokąd teraz?',
     1: 'Została ostatnia paczka. Do kogo jedziemy?',
   };
-  const STATUS = { order: 'do spakowania', sort: 'w sortowni', van: 'w aucie', done: 'doręczona', wait: 'do odebrania' };
+  const STATUS = { order: 'do spakowania', sort: 'w sortowni', van: 'w aucie', done: 'doręczona', wait: 'do odebrania', call: 'zamówi przez telefon w trasie' };
 
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const $ = (s) => document.querySelector(s);
@@ -1392,6 +1393,16 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   const cnt = () => Math.min(5, Math.max(1, countPick || lvl().count));
   const dels = () => state.round.filter((p) => p.kind !== 'pick');
   const pendingStops = () => state.round.filter((p) => (p.kind === 'pick' ? p.status === 'wait' : p.status === 'van'));
+  // Paczki w sortowni: bez już doręczonych i bez zamówień, które dopiero przyjdą telefonem w trasie.
+  const depotDels = () => dels().filter((p) => p.status !== 'done' && p.status !== 'call');
+  // Telefon w trasie dzwoni, gdy Max ukończy `callAt` przystanków.
+  const callDue = () => {
+    const c = state.round.find((p) => p.status === 'call');
+    return c && state.round.filter((p) => p.status === 'done').length >= c.callAt ? c : null;
+  };
+  // Ile rund z rzędu na trasie z odbiorami wypadło bez odbioru; po dwóch trzecia ma odbiór na pewno.
+  let noPick = 0;
+  try { noPick = parseInt(localStorage.getItem('kurier-max-nopick'), 10) || 0; } catch (e) {}
   const lowFuel = () => !!lvl().fuel && state.fuel < 35 && pendingStops().length > 0;
   // Każdy restart podbija `epoch`, więc odłożone kroki poprzedniej rozgrywki już się nie wykonają.
   let epoch = 0;
@@ -1584,6 +1595,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     { id: 'full', t: 'Pełny bak! Teraz zapłać kartą.' },
     { id: 'pickup', t: 'Ten zwierzak chce nadać paczkę. Połóż ją na wadze.' },
     { id: 'picked', t: 'Paczka odebrana! Zawieziemy ją do sortowni.' },
+    { id: 'call', t: 'Dzwoni telefon w aucie! Ktoś chce zamówić paczkę. Wracamy do sortowni.' },
   ];
   const LINE = Object.fromEntries(LINES.map((l) => [l.id, l.t]));
   const RATE = 16000;
@@ -1731,12 +1743,14 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   const track = $('#track');
   function renderHUD(popIdx) {
     if (!state.round.length) {
-      track.innerHTML = '<li></li>'.repeat(cnt() + (lvl().pickup ? 1 : 0));
+      track.innerHTML = '<li></li>'.repeat(cnt());
       return;
     }
     track.innerHTML = state.round.map((p, i) => {
       const st = p.kind === 'pick' && p.status === 'done' ? 'odebrana' : STATUS[p.status];
-      return `<li class="${p.kind === 'pick' ? 'pick ' : ''}${p.status}${i === popIdx ? ' pop' : ''}" aria-label="${R[p.rid].name}: ${st}"><span>${R[p.rid].ani}</span></li>`;
+      // Zamówienie z telefonu w trasie to niespodzianka: do dzwonka widać tylko słuchawkę.
+      const call = p.status === 'call';
+      return `<li class="${p.kind === 'pick' ? 'pick ' : ''}${p.status}${i === popIdx ? ' pop' : ''}" aria-label="${call ? 'Niespodzianka' : R[p.rid].name}: ${st}"><span>${call ? '☎️' : R[p.rid].ani}</span></li>`;
     }).join('');
   }
 
@@ -1749,10 +1763,35 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
       return { rid, kind, no: `MX${digits}PL`, short: `MX ${digits.slice(-4)}`, status, time: null };
     };
     const n = cnt();
+    const prev = LEVELS[state.level - 1] || {};
     state.round = ids.slice(0, n).map((rid) => mk(rid, 'del', 'sort'));
-    // Zamówienie dotyczy każdej paczki: każdy zwierzak dzwoni, a Max pakuje wszystko sam.
-    if (lv.order) state.round.forEach((p) => { p.status = 'order'; p.ordered = true; });
-    if (lv.pickup) state.round.push(mk(ids[n], 'pick', 'wait'));
+    // Odbiory: 0–2 na trasie z odbiorami (zwierzaki bez paczki do doręczenia). Trasa, która je
+    // wprowadza, i trzecia runda z rzędu bez odbioru mają co najmniej jeden.
+    if (lv.pickup) {
+      const max = Math.min(2, 6 - n);
+      const min = !prev.pickup || noPick >= 2 ? 1 : 0;
+      const roll = Math.random();
+      const k = Math.max(min, Math.min(max, roll < 0.25 ? 0 : roll < 0.75 ? 1 : 2));
+      ids.slice(n, n + k).forEach((rid) => state.round.push(mk(rid, 'pick', 'wait')));
+    }
+    // Zamówienia: losowo część paczek trzeba najpierw spakować, reszta czeka gotowa w sortowni.
+    if (lv.order) {
+      const ds = dels();
+      ds.forEach((p) => { if (Math.random() < 0.5) p.ordered = true; });
+      if (!ds.some((p) => p.ordered)) ds[Math.floor(Math.random() * n)].ordered = true;
+      ds.forEach((p) => { if (p.ordered) p.status = 'order'; });
+      // Od trasy 3 jedno zamówienie może przyjść telefonem w trasie, po którymś przystanku.
+      // Wtedy auto wraca do sortowni, Max pakuje paczkę, ładuje ją i jedzie dalej.
+      const stops = state.round.length - 1;
+      if (prev.order && stops > 0 && Math.random() < 0.45) {
+        const p = shuffle(ds.filter((x) => x.ordered))[0];
+        p.status = 'call';
+        p.call = true;
+        p.callAt = 1 + Math.floor(Math.random() * stops);
+      }
+    }
+    // Paczki z sortowni i odbiory na pasku w losowej kolejności.
+    state.round = shuffle(state.round);
     state.fuel = 100;
     state.current = null;
     if (geom) state.vanLen = geom.start;
@@ -1768,7 +1807,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
 
   function enterDepot(queue) {
     show('s-depot');
-    const ds = dels();
+    const ds = depotDels();
     const loaded = ds.filter((p) => p.status !== 'sort');
     hold.innerHTML = '<div class="slot"></div>'.repeat(ds.length);
     hold.style.gridTemplate = ds.length > 4 ? '1fr 1fr / repeat(3, 1fr)' : ds.length >= 3 ? '1fr 1fr / 1fr 1fr' : ds.length === 2 ? '1fr / 1fr 1fr' : '1fr / 1fr';
@@ -1821,7 +1860,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     if (!p || p.status !== 'sort') return;
     p.status = 'van';
     b.dataset.busy = '1';
-    const idx = dels().filter((x) => x.status !== 'sort').length - 1;
+    const idx = depotDels().filter((x) => x.status !== 'sort').length - 1;
     const slot = slots[idx];
     sfx.beep();
     b.classList.add('scan');
@@ -1835,7 +1874,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
         sfx.thump();
         renderHUD(state.round.indexOf(p));
         if (COUNT_WORDS[idx]) say('c' + (idx + 1), COUNT_WORDS[idx], { keepStrip: true });
-        if (dels().every((x) => x.status !== 'sort')) {
+        if (depotDels().every((x) => x.status !== 'sort')) {
           later(() => {
             rear.classList.remove('open');
             sfx.door();
@@ -1922,7 +1961,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   function houseSVG(s, i) {
     const r = R[i];
     const p = state.round.find((x) => x.rid === i);
-    const cls = !p ? '' : p.status === 'done' ? ' done' : p.status === 'van' ? ' pending' : p.status === 'wait' ? ' pickup' : '';
+    const cls = !p || p.status === 'call' ? '' : p.status === 'done' ? ' done' : p.status === 'van' ? ' pending' : p.status === 'wait' ? ' pickup' : '';
     return `<g class="house${cls}" data-i="${i}" transform="translate(${s.x} ${s.y})" tabindex="0" role="button" aria-label="${r.name}, ${r.street}">` +
       `<circle class="halo" cy="-8" r="80"/>` +
       `<rect class="hit" x="-70" y="-78" width="140" height="140" rx="22"/>` +
@@ -1958,7 +1997,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   function onHouse(i, g) {
     if (busy) return;
     const r = R[i];
-    const p = state.round.find((x) => x.rid === i);
+    const p = state.round.find((x) => x.rid === i && (x.kind === 'pick' || x.status === 'van' || x.status === 'done'));
     if (!p) {
       sfx.oops();
       restart(g.querySelector('.h-art'), 'nope');
@@ -2194,7 +2233,20 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     }, wait(2700));
   });
 
+  // Telefon w aucie: zwierzak zamawia, auto wraca do sortowni, a tam Max odbiera i pakuje paczkę.
+  function phoneInVan(p) {
+    enterMap('call', LINE.call);
+    sfx.phone();
+    busy = true;
+    later(() => sfx.phone(), wait(1400));
+    later(() => drive(geom.start, () => {
+      later(() => { busy = false; p.status = 'order'; enterOrder(true); }, wait(500));
+    }), wait(2600));
+  }
+
   $('#btn-back').addEventListener('click', () => {
+    const call = callDue();
+    if (call) { phoneInVan(call); return; }
     const left = pendingStops().length;
     if (left && lowFuel()) { enterMap('fuel', LINE.fuel); return; }
     if (left) { enterMap('next', LEFT_MSG[left] || 'Dokąd teraz jedziemy?'); return; }
@@ -2247,8 +2299,9 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
       const r = R[p.rid];
       const t = p.time ? new Date(p.time).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }) : '';
       const pick = p.kind === 'pick';
+      const how = pick ? '' : p.call ? ' · ☎️ w trasie' : p.ordered ? ' · ☎️ zamówienie' : '';
       return `<li><span class="log-ani">${r.ani}</span>` +
-        `<span class="log-main"><b>${r.name}</b><small>${r.street} · ${p.no}</small></span>` +
+        `<span class="log-main"><b>${r.name}</b><small>${r.street} · ${p.no}${how}</small></span>` +
         `<span class="log-st"><span>${pick ? '📦' : r.item}</span>${pick ? 'ODEBRANO' : 'DORĘCZONO'} ${t}</span></li>`;
     }).join('');
     // Ukończona trasa odblokowuje następną.
@@ -2309,12 +2362,17 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
     $('#intro-title').textContent = lv.title;
     $('#intro-news').textContent = lv.news;
     const prev = LEVELS[state.level - 1] || {};
+    const ds = dels();
+    const ord = ds.filter((p) => p.ordered).length;
+    const picks = state.round.length - ds.length;
+    const call = ds.some((p) => p.call);
     const feats = [
       ['📦', `${cnt()} ${cnt() === 1 ? 'paczka' : cnt() < 5 ? 'paczki' : 'paczek'}`, false],
-      lv.order && ['☎️', `${cnt()} ${cnt() === 1 ? 'zamówienie' : cnt() < 5 ? 'zamówienia' : 'zamówień'}`, !prev.order],
+      lv.order && ['☎️', `${ord} ${ord === 1 ? 'zamówienie' : ord < 5 ? 'zamówienia' : 'zamówień'}`, !prev.order],
+      call && ['📱', 'telefon w trasie', false],
       lv.cockpit && ['🚦', 'jazda autem', !prev.cockpit],
       lv.fuel && ['⛽', 'stacja paliw', !prev.fuel],
-      lv.pickup && ['⬆️', 'odbiór paczki', !prev.pickup],
+      picks > 0 && ['⬆️', picks === 1 ? 'odbiór paczki' : `${picks} odbiory`, !prev.pickup],
     ].filter(Boolean);
     $('#intro-feats').innerHTML = feats.map(([i, t, n]) => `<li class="${n && state.level ? 'new' : ''}"><i>${i}</i> ${t}</li>`).join('');
     $('#counts').innerHTML = [1, 2, 3, 4, 5].map((k) =>
@@ -2334,6 +2392,10 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   });
   $('#btn-intro').addEventListener('click', () => {
     audio();
+    if (lvl().pickup) {
+      noPick = state.round.some((p) => p.kind === 'pick') ? 0 : noPick + 1;
+      try { localStorage.setItem('kurier-max-nopick', String(noPick)); } catch (e) {}
+    }
     if (dels().some((p) => p.status === 'order')) enterOrder();
     else enterDepot();
   });
@@ -3251,8 +3313,14 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
       state.round.forEach((p) => { if (p.status === 'done') { p.status = p.kind === 'pick' ? 'wait' : 'van'; p.time = null; } });
       renderHUD();
       enterMap('map', LINE.map);
+    } else if (sc === 's-depot') {
+      // Doręczone zostają doręczone (np. po powrocie z telefonu w trasie); reszta wraca na taśmę.
+      state.round.forEach((p) => { if (p.status === 'van') p.status = 'sort'; });
+      renderHUD();
+      enterDepot();
     } else {
-      state.round.forEach((p) => { p.status = p.kind === 'pick' ? 'wait' : 'sort'; p.time = null; });
+      // Ta sama trasa od sortowni: spakowane zamówienia czekają na taśmie, telefon w trasie zadzwoni znowu.
+      state.round.forEach((p) => { p.status = p.kind === 'pick' ? 'wait' : p.call ? 'call' : 'sort'; p.time = null; });
       renderHUD();
       enterDepot();
     }
@@ -3289,6 +3357,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
       renderHUD();
       if (state.round.some((p) => p.status === 'order')) enterOrder();
       else if (state.round.some((p) => p.status === 'sort')) enterDepot();
+      else if (callDue()) { state.vanLen = geom ? geom.start : null; callDue().status = 'order'; enterOrder(); }
       else if (pendingStops().length) enterMap('next', 'Dokąd teraz jedziemy?');
       else enterEnd();
       return;
