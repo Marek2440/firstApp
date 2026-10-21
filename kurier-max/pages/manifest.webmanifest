@@ -1,0 +1,17 @@
+{
+  "name": "Kurier Max",
+  "short_name": "Kurier Max",
+  "description": "Gra dla Maxa: ładujesz paczki w sortowni, rozwozisz je po osiedlu i zbierasz podpisy.",
+  "lang": "pl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#BFE4F7",
+  "theme_color": "#F26B1D",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

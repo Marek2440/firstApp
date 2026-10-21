@@ -1754,7 +1754,12 @@ button:focus-visible, [tabindex]:focus-visible { outline: 4px solid var(--plate)
   }
   function storeNote() {
     if (store === 'db') return 'Nagrania zapisują się w grze. Usłyszysz je na każdym urządzeniu, na którym otworzysz ten link.';
-    if (store === 'local') return 'Nagrania zapisują się tylko w tej przeglądarce, na tym urządzeniu.';
+    if (store === 'local') {
+      const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      const installed = navigator.standalone === true || window.matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches;
+      return 'Nagrania zapisują się na tym urządzeniu.' +
+        (ios && !installed ? ' Jeśli chcesz grać z ikony na ekranie początkowym, najpierw ją dodaj i wgraj nagrania już tam, bo ma osobną pamięć.' : '');
+    }
     return 'Nagrania działają do zamknięcia tej strony.';
   }
   function renderLines() {

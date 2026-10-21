@@ -1,0 +1,54 @@
+<!-- Tylko wersja na GitHub Pages: podpowiedź instalacji, ekran bez wygaszania, gra bez internetu. -->
+<div class="install-tip" id="install-tip" hidden>
+  <p>Zrób z gry aplikację: stuknij <b>Udostępnij</b> <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3.5M8 7.5l4-4 4 4M6 11H5v9.5h14V11h-1"/></svg> i wybierz <b>„Do ekranu początkowego”</b>.</p>
+  <button class="install-x" id="install-x" type="button" aria-label="Zamknij podpowiedź">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>
+  </button>
+</div>
+<style>
+.install-tip {
+  position: fixed; z-index: 90; margin: 0 auto; max-width: 520px;
+  left: max(16px, env(safe-area-inset-left, 0px)); right: max(16px, env(safe-area-inset-right, 0px));
+  top: calc(70px + env(safe-area-inset-top, 0px));
+  display: flex; align-items: center; gap: 12px; padding: 12px 12px 12px 16px;
+  background: var(--paper); color: var(--ink); border: 3px solid var(--ink); border-radius: 16px; box-shadow: 0 5px 0 var(--ink);
+}
+.install-tip p { flex: 1; margin: 0; font-size: 16px; font-weight: 700; line-height: 1.35; }
+.install-tip svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; vertical-align: -3px; }
+.install-x { flex: none; width: 40px; height: 40px; padding: 0; display: grid; place-items: center; border-radius: 10px; border: 3px solid var(--ink); background: var(--paper); color: var(--ink); cursor: pointer; }
+</style>
+<script>
+(() => {
+  const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const installed = navigator.standalone === true || window.matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches;
+  const tip = document.getElementById('install-tip');
+  let dismissed = false;
+  try { dismissed = localStorage.getItem('kurier-max-install-tip') === 'off'; } catch (e) {}
+  if (ios && !installed && !dismissed) tip.hidden = false;
+  document.getElementById('install-x').addEventListener('click', () => {
+    tip.hidden = true;
+    try { localStorage.setItem('kurier-max-install-tip', 'off'); } catch (e) {}
+  });
+  // W trakcie gry podpowiedź by zasłaniała komunikaty bazy; wraca przy następnym otwarciu.
+  ['btn-start', 'btn-studio'].forEach((id) => {
+    const b = document.getElementById(id);
+    if (b) b.addEventListener('click', () => { tip.hidden = true; });
+  });
+
+  // Ekran nie gaśnie w trakcie zabawy.
+  let lock = null;
+  const keepAwake = async () => {
+    if (lock || !('wakeLock' in navigator) || document.visibilityState !== 'visible') return;
+    try {
+      lock = await navigator.wakeLock.request('screen');
+      lock.addEventListener('release', () => { lock = null; });
+    } catch (e) {}
+  };
+  document.addEventListener('pointerdown', keepAwake);
+  document.addEventListener('visibilitychange', keepAwake);
+
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
+})();
+</script>
