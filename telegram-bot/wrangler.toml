@@ -1,0 +1,18 @@
+name = "ai-asystent"
+main = "src/index.js"
+compatibility_date = "2026-10-15"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+# Model rozmowy. Tańsza opcja: "claude-haiku-5-5".
+CLAUDE_MODEL = "claude-opus-5-5"
+OPENAI_STT_MODEL = "gpt-4o-mini-transcribe"
+OPENAI_TTS_MODEL = "gpt-4o-mini-tts"
+# Głosy OpenAI: alloy, ash, coral, echo, fable, nova, onyx, sage, shimmer...
+OPENAI_TTS_VOICE = "alloy"
+
+# Historia rozmowy. Workflow "Telegram: wdrożenie bota" sam tworzy bazę KV
+# i podstawia tu jej ID przed wdrożeniem.
+[[kv_namespaces]]
+binding = "HISTORY"
+id = "KV_NAMESPACE_ID"

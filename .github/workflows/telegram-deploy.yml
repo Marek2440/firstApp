@@ -1,0 +1,108 @@
+name: "Telegram: wdrożenie bota"
+
+# Uruchamiane ręcznie: Actions → "Telegram: wdrożenie bota" → Run workflow.
+# Wdraża bota na Cloudflare Workers, przekazuje mu sekrety i podłącza webhook Telegrama.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: telegram-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: telegram-bot
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      AI_TRIGGER_SECRET: ${{ secrets.AI_TRIGGER_SECRET }}
+      KV_TITLE: ai-asystent-historia
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: telegram-bot/package-lock.json
+
+      - name: Sprawdź sekrety
+        run: |
+          missing=0
+          for name in CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID TELEGRAM_BOT_TOKEN \
+                      ANTHROPIC_API_KEY OPENAI_API_KEY AI_TRIGGER_SECRET; do
+            if [[ -z "${!name}" ]]; then echo "::error::Brak sekretu $name"; missing=1; fi
+          done
+          if [[ -z "$TELEGRAM_CHAT_ID" ]]; then
+            echo "::warning::Brak TELEGRAM_CHAT_ID. Po wdrożeniu napisz do bota, poda ci chat ID; dodaj go jako sekret i uruchom wdrożenie ponownie."
+          fi
+          exit $missing
+
+      - run: npm ci
+
+      - name: Testy
+        run: npm test
+
+      - name: Baza KV na historię rozmowy
+        run: |
+          api="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/storage/kv/namespaces"
+          auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
+          id=$(curl -sS --fail-with-body "${auth[@]}" "$api?per_page=100" \
+            | jq -r --arg t "$KV_TITLE" '.result[] | select(.title == $t) | .id' | head -n1)
+          if [[ -z "$id" ]]; then
+            id=$(curl -sS --fail-with-body "${auth[@]}" -H "Content-Type: application/json" \
+              -X POST "$api" -d "$(jq -n --arg t "$KV_TITLE" '{title: $t}')" | jq -r '.result.id')
+            echo "Utworzono bazę KV $KV_TITLE"
+          fi
+          [[ "$id" =~ ^[0-9a-f]{32}$ ]] || { echo "::error::Nie udało się ustalić ID bazy KV"; exit 1; }
+          sed -i "s/KV_NAMESPACE_ID/$id/" wrangler.toml
+
+      - name: Wdróż na Cloudflare
+        id: deploy
+        run: |
+          npx wrangler deploy | tee deploy.log
+          url=$(grep -oE 'https://[a-zA-Z0-9.-]+\.workers\.dev' deploy.log | head -n1)
+          [[ -n "$url" ]] || { echo "::error::Nie znalazłem adresu workers.dev w wyniku wdrożenia"; exit 1; }
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      # Sekret webhooka losujemy przy każdym wdrożeniu; bot i Telegram dostają go w tym samym kroku.
+      - name: Przekaż sekrety botowi i podłącz webhook Telegrama
+        env:
+          WORKER_URL: ${{ steps.deploy.outputs.url }}
+        run: |
+          webhook_secret=$(openssl rand -hex 32)
+          echo "::add-mask::$webhook_secret"
+          jq -n \
+            --arg TELEGRAM_BOT_TOKEN "$TELEGRAM_BOT_TOKEN" \
+            --arg TELEGRAM_CHAT_ID "$TELEGRAM_CHAT_ID" \
+            --arg TELEGRAM_WEBHOOK_SECRET "$webhook_secret" \
+            --arg ANTHROPIC_API_KEY "$ANTHROPIC_API_KEY" \
+            --arg OPENAI_API_KEY "$OPENAI_API_KEY" \
+            --arg AI_TRIGGER_SECRET "$AI_TRIGGER_SECRET" \
+            '$ARGS.named | with_entries(select(.value != ""))' > "$RUNNER_TEMP/secrets.json"
+          npx wrangler secret bulk "$RUNNER_TEMP/secrets.json"
+          rm "$RUNNER_TEMP/secrets.json"
+
+          curl -sS --fail-with-body "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/setWebhook" \
+            -H "Content-Type: application/json" \
+            -d "$(jq -n --arg url "$WORKER_URL/telegram" --arg s "$webhook_secret" \
+                  '{url: $url, secret_token: $s, allowed_updates: ["message"], drop_pending_updates: true}')" \
+            | jq -e '.ok' > /dev/null
+          {
+            echo "## Bot wdrożony ✅"
+            echo
+            echo "Adres bota: \`$WORKER_URL\`"
+            echo
+            echo "Wpisz go w **Settings → Secrets and variables → Actions → Variables** jako \`WORKER_URL\`."
+          } >> "$GITHUB_STEP_SUMMARY"
