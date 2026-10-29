@@ -10,8 +10,12 @@ const defs = [
 ];
 
 const demo = (title) => [
-  { id: 'n1', subject: `Przykład (${title}): zaktualizować umowę B2B`, from: 'High · Not started', date: '2026-10-29', unread: true, url: '#' },
-  { id: 'n2', subject: `Przykład (${title}): dopisać PKD do JDG`, from: 'Medium · In progress', date: '2026-10-31', unread: false, url: '#' }
+  { id: 'n1', subject: `Przykład (${title}): zaktualizować umowę B2B`, from: 'High · Not started', date: '2026-10-29', unread: true, url: '#',
+    notion: 'https://www.notion.so/demo',
+    detail: { history: [{ title: 'Przykład: projekt umowy B2B v1', date: '2026-10-15', url: 'https://www.notion.so/demo' }], caseHistory: 'High · Not started' } },
+  { id: 'n2', subject: `Przykład (${title}): dopisać PKD do JDG`, from: 'Medium · In progress', date: '2026-10-31', unread: false, url: '#',
+    notion: 'https://www.notion.so/demo',
+    detail: { history: [], caseHistory: 'Medium · In progress' } }
 ];
 
 module.exports = defs.map((d) => ({
@@ -31,7 +35,12 @@ module.exports = defs.map((d) => ({
         from: [t.priority, t.status].filter(Boolean).join(' · '),
         date: t.due,
         unread: d.overdue,
-        url: t.url
+        url: t.url,
+        notion: t.url,
+        detail: {
+          history: [{ title: t.name, date: t.due, url: t.url }],
+          caseHistory: `${t.priority} · ${t.status}`
+        }
       }))
     };
   }

@@ -5,56 +5,219 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Kokpit</title>
 <style>
-  :root { --bg:#f6f7f9; --card:#fff; --fg:#1b1f24; --mute:#667085; --line:#e4e7ec; --ok:#12805c; --warn:#b54708; }
-  @media (prefers-color-scheme: dark) { :root { --bg:#14171c; --card:#1d2128; --fg:#e8eaed; --mute:#98a2b3; --line:#2b313a; --ok:#4cc38a; --warn:#f0a05a; } }
+  :root { --bg:#f6f7f9; --card:#fff; --fg:#1b1f24; --mute:#667085; --line:#e4e7ec; --ok:#12805c; --warn:#b54708; --acc:#2563eb; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#14171c; --card:#1d2128; --fg:#e8eaed; --mute:#98a2b3; --line:#2b313a; --ok:#4cc38a; --warn:#f0a05a; --acc:#6ea0ff; } }
   * { box-sizing:border-box } body { margin:0; background:var(--bg); color:var(--fg); font:14px/1.45 system-ui,sans-serif }
-  header { display:flex; gap:12px; align-items:center; padding:14px 16px; border-bottom:1px solid var(--line) }
+  header { display:flex; gap:12px; align-items:center; flex-wrap:wrap; padding:14px 16px; border-bottom:1px solid var(--line) }
   h1 { font-size:16px; margin:0; flex:1 } .conn a, .conn span { font-size:13px }
-  .grid { display:grid; gap:12px; padding:16px; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)) }
-  .brick { background:var(--card); border:1px solid var(--line); border-radius:10px; overflow:hidden }
-  .brick h2 { font-size:13px; margin:0; padding:10px 12px; display:flex; justify-content:space-between; border-bottom:1px solid var(--line) }
-  .tag { font-weight:500; color:var(--ok) } .tag.demo { color:var(--warn) }
-  ul { list-style:none; margin:0; padding:0; max-height:340px; overflow:auto }
+  button, select, input, textarea { font:inherit; color:inherit; background:var(--card); border:1px solid var(--line); border-radius:6px }
+  button { cursor:pointer; padding:3px 9px } button:hover { border-color:var(--mute) }
+  button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visible { outline:2px solid var(--acc); outline-offset:1px }
+  .grid { display:grid; gap:12px; padding:16px; grid-template-columns:repeat(auto-fill,minmax(min(320px,100%),1fr)) }
+  .brick { background:var(--card); border:1px solid var(--line); border-radius:10px; overflow:hidden; min-width:0 }
+  .brick h2 { font-size:13px; margin:0; padding:10px 12px; display:flex; gap:8px; align-items:center; border-bottom:1px solid var(--line) }
+  .brick h2 .t { flex:1; min-width:0; overflow-wrap:anywhere }
+  .tag { font-weight:500; color:var(--ok); font-size:12px } .tag.demo { color:var(--warn) }
+  .via { font-size:11px; color:var(--mute); border:1px solid var(--line); border-radius:4px; padding:0 5px }
+  .rf { padding:0 7px; line-height:20px }
+  ul { list-style:none; margin:0; padding:0; max-height:420px; overflow:auto }
   li { padding:8px 12px; border-bottom:1px solid var(--line) } li:last-child { border:0 }
-  li a { color:inherit; text-decoration:none; display:block } li.unread .s { font-weight:600 }
-  .m { color:var(--mute); font-size:12px } .empty,.err { padding:14px 12px; color:var(--mute) } .err { color:var(--warn) }
+  .row { display:flex; gap:6px; align-items:flex-start }
+  .tg { border:0; background:none; padding:0 4px; color:var(--mute); line-height:1.45 }
+  .main { flex:1; min-width:0 } .main a.s { color:inherit; text-decoration:none; display:block; overflow-wrap:anywhere }
+  li.unread .s { font-weight:600 }
+  .nt { border:1px solid var(--mute); border-radius:4px; font-size:11px; font-weight:700; padding:0 4px; color:var(--fg); text-decoration:none; line-height:16px }
+  .m { color:var(--mute); font-size:12px; overflow-wrap:anywhere } .empty,.err { padding:14px 12px; color:var(--mute) } .err { color:var(--warn) }
+  .det { margin:8px 0 2px 26px; display:grid; gap:8px } .det h4 { margin:0 0 2px; font-size:12px; color:var(--mute); font-weight:600 }
+  .det ul { max-height:none; overflow:visible } .det li { padding:2px 0; border:0 }
+  .cs { white-space:pre-wrap; overflow-wrap:anywhere }
+  .det textarea { width:100%; min-height:60px; padding:6px; resize:vertical }
+  .ctl { display:flex; gap:6px; flex-wrap:wrap; margin-top:4px }
+  .lbl { font-size:11px; color:var(--warn) } .msg { font-size:12px; color:var(--warn) }
+  .dr { display:flex; gap:6px; justify-content:space-between; align-items:flex-start; padding:2px 0 }
+  #settings { margin:12px 16px 0; padding:12px; overflow-x:auto; background:var(--card); border:1px solid var(--line); border-radius:10px }
+  #settings[hidden] { display:none }
+  #settings table { border-collapse:collapse; width:100%; margin-top:8px } #settings td, #settings th { padding:4px 6px; text-align:left; border-bottom:1px solid var(--line); font-weight:normal }
+  #settings th { color:var(--mute); font-size:12px } #settings input[type=number] { width:90px; padding:3px 6px }
 </style>
 </head>
 <body>
-<header><h1>Kokpit</h1><div class="conn" id="conn"></div></header>
+<header><h1>Kokpit</h1><div class="conn" id="conn"></div><button id="gear" type="button" aria-expanded="false" aria-controls="settings" title="Ustawienia">⚙ Ustawienia</button></header>
+<section id="settings" hidden aria-label="Ustawienia"></section>
 <main class="grid" id="grid"></main>
 <script>
-const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
-const get = (u) => fetch(u).then((r) => r.json().then((j) => { if (!r.ok) throw new Error(j.error); return j; }));
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const href = (u) => (typeof u === 'string' && /^(https?:\/\/|#)/i.test(u)) ? u : '#';
+const call = (method, u, body) => fetch(u, { method, headers: body ? { 'content-type': 'application/json' } : undefined, body: body ? JSON.stringify(body) : undefined })
+  .then((r) => r.json().catch(() => ({})).then((j) => { if (!r.ok) throw new Error((j && j.error) || 'Błąd ' + r.status); return j; }));
+const get = (u) => call('GET', u);
+
+const ACTIONS = [['reply', 'Odpowiedź'], ['add-to-notion', 'Dodaj do Notion'], ['move', 'Przenieś']];
+const REFRESH = [['default', 'Domyślne'], ['auto', 'Auto'], ['manual', 'Ręczne']];
+const DEF_B = { enabled: true, expanded: false, refresh: 'default' };
+
+let bricks = [], settings = { refreshDefaultMs: 120000, bricks: {} };
+const views = new Map();              // brickId -> { el, timer, data, error }
+const open = new Map(), texts = new Map(), acts = new Map(), drafts = new Map(), msgs = new Map(); // klucz: brickId|itemId
+const K = (b, i) => b + '|' + i;
+const cfg = (id) => Object.assign({}, DEF_B, settings.bricks && settings.bricks[id]);
 
 async function conn() {
-  const { gmail, notion } = await get('/api/status');
-  const g = gmail.connected ? '<span class="tag">Gmail połączony</span>'
-    : gmail.configured ? '<a href="/auth/google">Połącz Gmail</a>'
-    : '<span class="m">Gmail: uzupełnij .env</span>';
-  const n = notion.connected ? '<span class="tag">Notion połączony</span>' : '<span class="m">Notion: dodaj NOTION_TOKEN</span>';
-  document.getElementById('conn').innerHTML = g + ' &nbsp; ' + n;
+  try {
+    const { gmail, notion } = await get('/api/status');
+    const g = gmail.connected ? '<span class="tag">Gmail połączony</span>'
+      : gmail.configured ? '<a href="/auth/google">Połącz Gmail</a>'
+      : '<span class="m">Gmail: uzupełnij .env</span>';
+    const n = notion.connected ? '<span class="tag">Notion połączony</span>' : '<span class="m">Notion: dodaj NOTION_TOKEN</span>';
+    document.getElementById('conn').innerHTML = g + ' &nbsp; ' + n;
+  } catch (e) { document.getElementById('conn').innerHTML = '<span class="m">Status niedostępny</span>'; }
 }
 
-function render(el, d) {
-  const rows = d.items.map((i) => `<li class="${i.unread ? 'unread' : ''}"><a href="${esc(i.url)}" target="_blank" rel="noopener">
-    <div class="s">${esc(i.subject)}</div><div class="m">${esc(i.from)} ${esc(i.date)}</div></a></li>`).join('');
-  el.querySelector('.tag').textContent = d.demo ? 'DEMO' : `NA ŻYWO · ${d.total}`;
-  el.querySelector('.tag').classList.toggle('demo', d.demo);
-  el.querySelector('.body').innerHTML = rows ? `<ul>${rows}</ul>` : '<div class="empty">Pusto</div>';
+function itemHtml(b, i) {
+  const id = String(i.id), k = K(b.id, id), isOpen = open.has(k) ? open.get(k) : cfg(b.id).expanded;
+  const d = i.detail || {}, hist = Array.isArray(d.history) ? d.history : [];
+  const nt = typeof i.notion === 'string' && i.notion ? `<a class="nt" href="${esc(href(i.notion))}" target="_blank" rel="noopener" title="Otwórz w Notion" aria-label="Otwórz w Notion">N</a>` : '';
+  const via = i.via ? `<span class="via" title="źródło">${esc(i.via)}</span>` : '';
+  let det = '';
+  if (isOpen) {
+    const hl = hist.length ? '<ul>' + hist.map((h) => `<li>${h.url ? `<a href="${esc(href(h.url))}" target="_blank" rel="noopener">${esc(h.title)}</a>` : esc(h.title)} <span class="m">${esc(h.date)}</span></li>`).join('') + '</ul>' : '—';
+    const dl = drafts.get(k);
+    const dh = dl && dl.length ? dl.map((x) => `<div class="dr"><div class="m"><b>${esc((ACTIONS.find((a) => a[0] === x.action) || [0, x.action])[1])}</b> · ${esc(x.createdAt)}<div class="cs">${esc(x.text)}</div></div><button type="button" data-a="del" data-id="${esc(x.id)}">Usuń</button></div>`).join('') : '<div class="m">Brak szkiców</div>';
+    const act = acts.get(k) || 'reply';
+    det = `<div class="det">
+      <div><h4>Historia w Notion</h4>${hl}</div>
+      <div><h4>Historia sprawy</h4><div class="cs">${d.caseHistory ? esc(d.caseHistory) : '—'}</div></div>
+      <div><h4>Odpowiedź</h4><div class="lbl">Szkic do zatwierdzenia – nic nie jest wysyłane</div>
+        <textarea data-a="txt" aria-label="Treść odpowiedzi" maxlength="10000">${esc(texts.get(k) || '')}</textarea>
+        <div class="ctl"><select data-a="act" aria-label="Akcja">${ACTIONS.map((a) => `<option value="${a[0]}"${a[0] === act ? ' selected' : ''}>${a[1]}</option>`).join('')}</select>
+        <button type="button" data-a="save">Zapisz szkic</button></div>
+        <div class="msg" role="status">${esc(msgs.get(k) || '')}</div></div>
+      <div><h4>Szkice</h4>${dh}</div></div>`;
+  }
+  return `<li class="${i.unread ? 'unread' : ''}" data-item="${esc(id)}"><div class="row">
+    <button type="button" class="tg" data-a="tog" aria-expanded="${isOpen}" aria-label="Szczegóły">${isOpen ? '▾' : '▸'}</button>
+    <div class="main"><a class="s" href="${esc(href(i.url))}" target="_blank" rel="noopener">${esc(i.subject)}</a><div class="m">${esc(i.from)} ${esc(i.date)}</div></div>${via}${nt}</div>${det}</li>`;
 }
 
-async function mount(b) {
-  const el = document.createElement('section');
-  el.className = 'brick';
-  el.innerHTML = `<h2>${esc(b.title)}<span class="tag">…</span></h2><div class="body"><div class="empty">Ładuję…</div></div>`;
-  document.getElementById('grid').append(el);
-  const tick = () => get('/api/brick/' + b.id).then((d) => render(el, d))
-    .catch((e) => { el.querySelector('.body').innerHTML = `<div class="err">${esc(e.message)}</div>`; });
-  tick(); setInterval(tick, b.refreshMs);
+function render(b) {
+  const v = views.get(b.id); if (!v) return;
+  const el = v.el, d = v.data, tag = el.querySelector('.tag'), body = el.querySelector('.body');
+  if (v.error) { body.innerHTML = `<div class="err">${esc(v.error)}</div>`; return; }
+  if (!d) return;
+  tag.textContent = d.demo ? 'DEMO' : `NA ŻYWO · ${d.total}`;
+  tag.classList.toggle('demo', !!d.demo);
+  const sc = body.querySelector('ul') ? body.querySelector('ul').scrollTop : 0;
+  const rows = (d.items || []).map((i) => itemHtml(b, i)).join('');
+  body.innerHTML = rows ? `<ul>${rows}</ul>` : '<div class="empty">Pusto</div>';
+  const ul = body.querySelector('ul'); if (ul) ul.scrollTop = sc;
 }
 
-conn(); get('/api/bricks').then((list) => list.forEach(mount));
+function tick(b, auto) {
+  const v = views.get(b.id); if (!v) return;
+  // nie przerywaj pisania: przy autoodświeżaniu pomiń render, gdy fokus jest w polu tej cegiełki
+  const ae = document.activeElement;
+  if (auto && ae && v.el.contains(ae) && /^(TEXTAREA|SELECT)$/.test(ae.tagName)) return;
+  return get('/api/brick/' + encodeURIComponent(b.id)).then((d) => { v.data = d; v.error = null; })
+    .catch((e) => { v.error = e.message; })
+    .then(() => { if (views.get(b.id) === v) render(b); });
+}
+
+function sync() {
+  const grid = document.getElementById('grid');
+  for (const b of bricks) {
+    const on = cfg(b.id).enabled, v = views.get(b.id);
+    if (!on && v) { clearInterval(v.timer); v.el.remove(); views.delete(b.id); }
+    if (on && !v) {
+      const el = document.createElement('section'); el.className = 'brick'; el.dataset.id = b.id;
+      el.innerHTML = `<h2><span class="t">${esc(b.title)}</span><span class="tag">…</span><span class="via">${esc(b.via || 'konto')}</span><button type="button" class="rf" data-a="rf" title="Odśwież" aria-label="Odśwież">↻</button></h2><div class="body"><div class="empty">Ładuję…</div></div>`;
+      views.set(b.id, { el, timer: null, data: null, error: null });
+      tick(b, false);
+    }
+  }
+  for (const b of bricks) {
+    const v = views.get(b.id); if (!v) continue;
+    grid.append(v.el);
+    clearInterval(v.timer); v.timer = null;
+    const r = cfg(b.id).refresh;
+    const ms = r === 'manual' ? 0 : r === 'auto' ? b.refreshMs : settings.refreshDefaultMs;
+    if (ms > 0) v.timer = setInterval(() => tick(b, true), ms);
+    render(b);
+  }
+}
+
+async function loadDrafts(b, id) {
+  const k = K(b, id);
+  try { drafts.set(k, (await get(`/api/drafts?brickId=${encodeURIComponent(b)}&itemId=${encodeURIComponent(id)}`)).drafts || []); }
+  catch (e) { msgs.set(k, e.message); }
+  const v = views.get(b); const br = bricks.find((x) => x.id === b); if (v && br) render(br);
+}
+
+document.getElementById('grid').addEventListener('click', async (e) => {
+  const t = e.target.closest('[data-a]'); if (!t) return;
+  const sec = t.closest('.brick'), b = bricks.find((x) => x.id === sec.dataset.id), a = t.dataset.a;
+  if (a === 'rf') { tick(b, false); return; }
+  const li = t.closest('li'), id = li && li.dataset.item, k = id && K(b.id, id);
+  if (a === 'tog') {
+    const now = !(open.has(k) ? open.get(k) : cfg(b.id).expanded);
+    open.set(k, now); render(b);
+    if (now && !drafts.has(k)) loadDrafts(b.id, id);
+    const nb = sec.querySelector(`li[data-item="${CSS.escape(id)}"] [data-a="tog"]`); if (nb) nb.focus();
+  } else if (a === 'save') {
+    const text = (texts.get(k) || '').trim();
+    if (!text) { msgs.set(k, 'Wpisz treść szkicu.'); render(b); return; }
+    const item = ((views.get(b.id).data || {}).items || []).find((x) => String(x.id) === id);
+    try {
+      await call('POST', '/api/drafts', { brickId: b.id, itemId: id, text, action: acts.get(k) || 'reply', subject: item ? String(item.subject).slice(0, 300) : undefined });
+      texts.delete(k); msgs.set(k, 'Zapisano szkic.');
+      await loadDrafts(b.id, id);
+    } catch (er) { msgs.set(k, er.message); render(b); }
+  } else if (a === 'del') {
+    try { await call('DELETE', '/api/drafts/' + encodeURIComponent(t.dataset.id)); msgs.set(k, ''); }
+    catch (er) { msgs.set(k, er.message); }
+    await loadDrafts(b.id, id);
+  }
+});
+document.getElementById('grid').addEventListener('input', (e) => {
+  const t = e.target; if (t.dataset.a !== 'txt') return;
+  texts.set(K(t.closest('.brick').dataset.id, t.closest('li').dataset.item), t.value);
+});
+document.getElementById('grid').addEventListener('change', (e) => {
+  const t = e.target; if (t.dataset.a !== 'act') return;
+  acts.set(K(t.closest('.brick').dataset.id, t.closest('li').dataset.item), t.value);
+});
+
+// --- panel ustawień ---
+const panel = document.getElementById('settings');
+function panelHtml(err) {
+  const rows = bricks.map((b) => { const c = cfg(b.id); return `<tr><td>${esc(b.title)}</td>
+    <td><input type="checkbox" data-s="enabled" data-id="${esc(b.id)}" aria-label="Włączona: ${esc(b.title)}"${c.enabled ? ' checked' : ''}></td>
+    <td><input type="checkbox" data-s="expanded" data-id="${esc(b.id)}" aria-label="Rozwinięta: ${esc(b.title)}"${c.expanded ? ' checked' : ''}></td>
+    <td><select data-s="refresh" data-id="${esc(b.id)}" aria-label="Odświeżanie: ${esc(b.title)}">${REFRESH.map((r) => `<option value="${r[0]}"${r[0] === c.refresh ? ' selected' : ''}>${r[1]}</option>`).join('')}</select></td></tr>`; }).join('');
+  panel.innerHTML = `<label>Domyślne odświeżanie (s) <input type="number" min="10" step="1" data-s="global" value="${Math.round(settings.refreshDefaultMs / 1000)}"></label>
+    <div class="msg" role="alert">${esc(err || '')}</div>
+    <table><thead><tr><th>Cegiełka</th><th>Włączona</th><th>Rozwinięta</th><th>Odświeżanie</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+panel.addEventListener('change', async (e) => {
+  const t = e.target, s = t.dataset.s; if (!s) return;
+  let patch;
+  if (s === 'global') patch = { refreshDefaultMs: Math.round(Number(t.value) * 1000) };
+  else patch = { bricks: { [t.dataset.id]: { [s]: s === 'refresh' ? t.value : t.checked } } };
+  try { settings = await call('PUT', '/api/settings', patch); panelHtml(''); sync(); }
+  catch (er) { panelHtml(er.message); }
+});
+const gear = document.getElementById('gear');
+gear.addEventListener('click', () => {
+  panel.hidden = !panel.hidden; gear.setAttribute('aria-expanded', String(!panel.hidden));
+  if (!panel.hidden) panelHtml('');
+});
+
+(async function start() {
+  conn();
+  const [bl, st] = await Promise.all([get('/api/bricks').catch(() => []), get('/api/settings').catch(() => null)]);
+  bricks = bl;
+  if (st && typeof st === 'object') settings = Object.assign(settings, st);
+  sync();
+})();
 </script>
 </body>
 </html>
