@@ -16,6 +16,12 @@ Bez kluczy działa w trybie DEMO (przykładowe dane).
 4. Wpisz `GOOGLE_CLIENT_ID` i `GOOGLE_CLIENT_SECRET` do `.env`, uruchom serwer.
 5. Kliknij "Połącz Gmail" w prawym górnym rogu. Token trafia do `.data/` (ignorowany przez git).
 
+## Podłączenie Notion (tylko odczyt)
+1. notion.so/profile/integrations -> nowa integracja (Internal), capability: Read content.
+2. Skopiuj token do `.env` jako `NOTION_TOKEN`.
+3. Na stronie Tasks Tracker: menu ... -> Connections -> dodaj tę integrację.
+4. Cegiełki `Notion: po terminie` i `Notion: najbliższe 7 dni` czytają właściwości `Task name`, `Status`, `Priority`, `Due date`.
+
 ## Dodawanie cegiełek
 Cegiełka to obiekt `{ id, title, type, refreshMs, load() }` w `bricks/`.
 Kolejną skrzynkę Gmaila dodasz jedną linijką w `bricks/gmail.js` (zapytanie w składni Gmaila).

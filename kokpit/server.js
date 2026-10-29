@@ -3,6 +3,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const gmail = require('./sources/gmail');
+const notion = require('./sources/notion');
 const bricks = require('./bricks');
 
 const PORT = Number(process.env.PORT || 3000);
@@ -18,7 +19,7 @@ http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
   try {
     if (url.pathname === '/api/status') {
-      return json(res, 200, { gmail: { configured: gmail.configured(), connected: gmail.connected() } });
+      return json(res, 200, { gmail: { configured: gmail.configured(), connected: gmail.connected() }, notion: { connected: notion.connected() } });
     }
     if (url.pathname === '/api/bricks') {
       return json(res, 200, bricks.map(({ id, title, type, refreshMs }) => ({ id, title, type, refreshMs })));
